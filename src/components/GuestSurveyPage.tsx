@@ -127,7 +127,7 @@ export function GuestSurveyPage() {
           />
         );
 
-      case 'relationship':
+      case 'relationship': {
         const otherGuests = event.guests.filter(
           (g) => g.id !== guest?.id && g.rsvpStatus !== 'declined'
         );
@@ -148,6 +148,7 @@ export function GuestSurveyPage() {
             </div>
           </div>
         );
+      }
 
       default:
         return null;

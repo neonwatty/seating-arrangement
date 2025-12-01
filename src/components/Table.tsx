@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useStore } from '../store/useStore';
-import { getGroupColor } from './GuestChip';
+import { getGroupColor } from './groupColors';
 import type { Table, Guest } from '../types';
 import './Table.css';
 
@@ -33,6 +33,7 @@ const DIETARY_ICONS: Record<string, string> = {
 };
 
 function SeatGuest({ guest, seatPosition, tablePosition, isSwapTarget }: SeatGuestProps) {
+  const { setEditingGuest, openContextMenu } = useStore();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: guest.id,
     data: {
@@ -81,11 +82,24 @@ function SeatGuest({ guest, seatPosition, tablePosition, isSwapTarget }: SeatGue
   if (hasDietary) tooltipParts.push(`Diet: ${guest.dietaryRestrictions!.join(', ')}`);
   if (hasAccessibility) tooltipParts.push(`Accessibility: ${guest.accessibilityNeeds!.join(', ')}`);
 
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingGuest(guest.id);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openContextMenu(e.clientX, e.clientY, 'guest', guest.id);
+  };
+
   return (
     <div
       ref={setNodeRef}
       className={`seat-guest ${isDragging ? 'dragging' : ''} ${groupColor ? 'has-group' : ''} ${isSwapTarget ? 'swap-target' : ''}`}
       title={tooltipParts.join('\n')}
+      onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       {...attributes}
       {...listeners}
     >
@@ -121,43 +135,45 @@ export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTa
   });
 
   // Track the last transform to prevent flicker on drop
+  // Note: Refs are accessed during render intentionally for synchronous state tracking
+  // to prevent visual flicker when drag ends. This is a valid pattern for this use case.
+  /* eslint-disable react-hooks/refs */
   const lastTransformRef = useRef<{ x: number; y: number } | null>(null);
   const lastPositionRef = useRef<{ x: number; y: number }>({ x: table.x, y: table.y });
-  const [pendingTransform, setPendingTransform] = useState<{ x: number; y: number } | null>(null);
+  const wasDraggingRef = useRef(false);
 
   // Update last transform while dragging
-  useEffect(() => {
-    if (isDragging && transform) {
-      lastTransformRef.current = { x: transform.x, y: transform.y };
-    }
-  }, [isDragging, transform]);
+  if (isDragging && transform) {
+    lastTransformRef.current = { x: transform.x, y: transform.y };
+    wasDraggingRef.current = true;
+  }
 
-  // When drag ends, keep the transform until position updates
-  useEffect(() => {
-    if (!isDragging && lastTransformRef.current) {
-      // Position hasn't updated yet, keep showing the transform
-      if (table.x === lastPositionRef.current.x && table.y === lastPositionRef.current.y) {
-        setPendingTransform(lastTransformRef.current);
-      } else {
-        // Position updated, clear everything
-        setPendingTransform(null);
-        lastTransformRef.current = null;
-        lastPositionRef.current = { x: table.x, y: table.y };
-      }
-    }
-  }, [isDragging, table.x, table.y]);
+  // Compute active transform synchronously
+  let activeTransform: { x: number; y: number } | null = null;
 
-  // Clear pending transform once position updates
-  useEffect(() => {
-    if (pendingTransform && (table.x !== lastPositionRef.current.x || table.y !== lastPositionRef.current.y)) {
-      setPendingTransform(null);
+  if (isDragging) {
+    // During drag, use the current transform
+    activeTransform = transform;
+  } else if (wasDraggingRef.current && lastTransformRef.current) {
+    // Just stopped dragging
+    if (table.x !== lastPositionRef.current.x || table.y !== lastPositionRef.current.y) {
+      // Position updated, clear everything
       lastTransformRef.current = null;
       lastPositionRef.current = { x: table.x, y: table.y };
+      wasDraggingRef.current = false;
+      activeTransform = null;
+    } else {
+      // Position hasn't updated yet, keep showing the pending transform
+      activeTransform = lastTransformRef.current;
     }
-  }, [table.x, table.y, pendingTransform]);
-
-  // Use active transform during drag, pending transform right after drop
-  const activeTransform = isDragging ? transform : pendingTransform;
+  } else {
+    // Not dragging and no pending transform
+    if (table.x !== lastPositionRef.current.x || table.y !== lastPositionRef.current.y) {
+      lastPositionRef.current = { x: table.x, y: table.y };
+    }
+    activeTransform = null;
+  }
+  /* eslint-enable react-hooks/refs */
 
   const seatPositions = getSeatPositions(table.shape, table.capacity, table.width, table.height);
 
@@ -307,6 +323,18 @@ export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTa
           title={violationTooltip}
         >
           ⚠️ {violations.length}
+        </div>
+      )}
+
+      {/* Availability indicator during drag */}
+      {isOver && table.capacity > guests.length && (
+        <div className="availability-indicator">
+          {table.capacity - guests.length} seat{table.capacity - guests.length !== 1 ? 's' : ''} available
+        </div>
+      )}
+      {isOver && table.capacity <= guests.length && (
+        <div className="availability-indicator full">
+          Table full
         </div>
       )}
 

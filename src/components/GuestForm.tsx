@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import type { Guest, RelationshipType } from '../types';
 import './GuestForm.css';
@@ -21,29 +21,12 @@ export function GuestForm({ guestId, onClose }: GuestFormProps) {
   const { event, addGuest, updateGuest, removeGuest, addRelationship, removeRelationship, assignGuestToTable } = useStore();
   const existingGuest = guestId ? event.guests.find((g) => g.id === guestId) : null;
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    jobTitle: '',
-    industry: '',
-    interests: '',
-    group: '',
-    dietaryRestrictions: [] as string[],
-    accessibilityNeeds: '',
-    rsvpStatus: 'pending' as Guest['rsvpStatus'],
-    notes: '',
-  });
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const [showSuccessFlash, setShowSuccessFlash] = useState(false);
 
-  const [newRelation, setNewRelation] = useState({
-    guestId: '',
-    type: 'friend' as RelationshipType,
-    strength: 3,
-  });
-
-  useEffect(() => {
+  const getInitialFormData = () => {
     if (existingGuest) {
-      setFormData({
+      return {
         name: existingGuest.name,
         email: existingGuest.email || '',
         company: existingGuest.company || '',
@@ -55,11 +38,40 @@ export function GuestForm({ guestId, onClose }: GuestFormProps) {
         accessibilityNeeds: existingGuest.accessibilityNeeds?.join(', ') || '',
         rsvpStatus: existingGuest.rsvpStatus,
         notes: existingGuest.notes || '',
-      });
+      };
     }
-  }, [existingGuest]);
+    return {
+      name: '',
+      email: '',
+      company: '',
+      jobTitle: '',
+      industry: '',
+      interests: '',
+      group: '',
+      dietaryRestrictions: [] as string[],
+      accessibilityNeeds: '',
+      rsvpStatus: 'pending' as Guest['rsvpStatus'],
+      notes: '',
+    };
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState(getInitialFormData);
+
+  const [newRelation, setNewRelation] = useState({
+    guestId: '',
+    type: 'friend' as RelationshipType,
+    strength: 3,
+  });
+
+  // Auto-focus name field on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      nameInputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent, addAnother = false) => {
     e.preventDefault();
     const guestData = {
       name: formData.name,
@@ -79,10 +91,35 @@ export function GuestForm({ guestId, onClose }: GuestFormProps) {
 
     if (existingGuest) {
       updateGuest(existingGuest.id, guestData);
+      onClose();
     } else {
       addGuest(guestData);
+
+      if (addAnother) {
+        // Reset form for next guest, keep group for convenience
+        const currentGroup = formData.group;
+        setFormData({
+          name: '',
+          email: '',
+          company: '',
+          jobTitle: '',
+          industry: '',
+          interests: '',
+          group: currentGroup,
+          dietaryRestrictions: [],
+          accessibilityNeeds: '',
+          rsvpStatus: 'pending',
+          notes: '',
+        });
+        // Show success flash
+        setShowSuccessFlash(true);
+        setTimeout(() => setShowSuccessFlash(false), 300);
+        // Focus name field
+        setTimeout(() => nameInputRef.current?.focus(), 50);
+      } else {
+        onClose();
+      }
     }
-    onClose();
   };
 
   const handleDelete = () => {
@@ -121,7 +158,7 @@ export function GuestForm({ guestId, onClose }: GuestFormProps) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="guest-form-modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`guest-form-modal ${showSuccessFlash ? 'success-flash' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{existingGuest ? 'Edit Guest' : 'Add Guest'}</h2>
           <button className="close-btn" onClick={onClose}>
@@ -136,6 +173,7 @@ export function GuestForm({ guestId, onClose }: GuestFormProps) {
               <label>
                 Name *
                 <input
+                  ref={nameInputRef}
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -353,6 +391,15 @@ export function GuestForm({ guestId, onClose }: GuestFormProps) {
             <button type="button" className="btn-secondary" onClick={onClose}>
               Cancel
             </button>
+            {!existingGuest && (
+              <button
+                type="button"
+                className="btn-accent"
+                onClick={(e) => handleSubmit(e, true)}
+              >
+                Save & Add Another
+              </button>
+            )}
             <button type="submit" className="btn-primary">
               {existingGuest ? 'Save Changes' : 'Add Guest'}
             </button>

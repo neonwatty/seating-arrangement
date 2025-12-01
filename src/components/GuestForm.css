@@ -74,10 +74,10 @@
   animation: fadeIn var(--duration-normal) var(--ease-out) backwards;
 }
 
-.form-section:nth-child(1) { animation-delay: 0.05s; }
-.form-section:nth-child(2) { animation-delay: 0.1s; }
-.form-section:nth-child(3) { animation-delay: 0.15s; }
-.form-section:nth-child(4) { animation-delay: 0.2s; }
+.form-section:nth-child(1) { animation-delay: 0s; }
+.form-section:nth-child(2) { animation-delay: 0.03s; }
+.form-section:nth-child(3) { animation-delay: 0.06s; }
+.form-section:nth-child(4) { animation-delay: 0.09s; }
 
 .form-section h3 {
   margin: 0 0 1.25rem 0;
@@ -321,4 +321,37 @@
 .btn-danger:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(248, 113, 113, 0.4);
+}
+
+/* Success flash for Save & Add Another */
+.guest-form-modal.success-flash {
+  animation: formSuccessFlash var(--duration-normal) var(--ease-out);
+}
+
+@keyframes formSuccessFlash {
+  0%, 100% {
+    box-shadow: var(--shadow-xl);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--color-success), var(--shadow-xl);
+  }
+}
+
+/* Save & Add Another button - accent style */
+.btn-accent {
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-hover) 100%);
+  color: var(--color-text);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-out);
+  box-shadow: 0 4px 12px rgba(255, 176, 136, 0.3);
+}
+
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 176, 136, 0.4);
 }

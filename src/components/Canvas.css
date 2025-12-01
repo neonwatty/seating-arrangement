@@ -50,6 +50,7 @@
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   transition: all var(--duration-normal) var(--ease-bounce);
 }
 
@@ -174,6 +175,7 @@
   text-align: center;
   cursor: pointer;
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   transition: background var(--duration-fast);
 }
 

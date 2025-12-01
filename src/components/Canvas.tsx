@@ -247,6 +247,7 @@ export function Canvas() {
     closeContextMenu,
     toggleTableSelection,
     toggleGuestSelection,
+    setEditingGuest,
   } = useStore();
 
   const [isPanning, setIsPanning] = useState(false);
@@ -570,6 +571,12 @@ export function Canvas() {
       const isSelected = canvas.selectedGuestIds.includes(guest.id);
 
       const items: ContextMenuItem[] = [
+        {
+          label: 'Edit Guest',
+          icon: '✏️',
+          onClick: () => setEditingGuest(guest.id),
+        },
+        { label: '', onClick: () => {}, divider: true },
         {
           label: isSelected ? 'Deselect' : 'Select',
           icon: isSelected ? '○' : '●',

@@ -10,7 +10,7 @@ interface CanvasGuestProps {
 }
 
 export function CanvasGuest({ guest, isSelected, isNearTable }: CanvasGuestProps) {
-  const { toggleGuestSelection, addGuestToSelection, selectGuest, openContextMenu } = useStore();
+  const { toggleGuestSelection, addGuestToSelection, selectGuest, openContextMenu, setEditingGuest } = useStore();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: guest.id,
     data: { type: 'canvas-guest', guest },
@@ -54,6 +54,10 @@ export function CanvasGuest({ guest, isSelected, isNearTable }: CanvasGuestProps
           // Normal click: select only this guest
           selectGuest(guest.id);
         }
+      }}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        setEditingGuest(guest.id);
       }}
       onContextMenu={(e) => {
         e.preventDefault();

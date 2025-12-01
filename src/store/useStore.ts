@@ -107,6 +107,9 @@ interface AppState {
     targetId: string | null;
   };
 
+  // Guest editing modal state
+  editingGuestId: string | null;
+
   // Actions - Event
   setEventName: (name: string) => void;
   setEventType: (type: Event['type']) => void;
@@ -175,6 +178,7 @@ interface AppState {
   alignTables: (tableIds: string[], alignment: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => void;
   distributeTables: (tableIds: string[], direction: 'horizontal' | 'vertical') => void;
   autoArrangeTables: (tableIds: string[]) => void;
+  nudgeSelectedTables: (dx: number, dy: number) => void;
 
   // Actions - View
   setActiveView: (view: AppState['activeView']) => void;
@@ -183,6 +187,9 @@ interface AppState {
   // Actions - Context Menu
   openContextMenu: (x: number, y: number, targetType: 'table' | 'guest' | 'canvas', targetId: string | null) => void;
   closeContextMenu: () => void;
+
+  // Actions - Guest Editing Modal
+  setEditingGuest: (id: string | null) => void;
 
   // Actions - Canvas Preferences
   toggleGrid: () => void;
@@ -311,6 +318,7 @@ export const useStore = create<AppState>()(
         targetType: null,
         targetId: null,
       },
+      editingGuestId: null,
 
       // Event actions
       setEventName: (name) =>
@@ -876,22 +884,24 @@ export const useStore = create<AppState>()(
             case 'left':
               targetValue = Math.min(...tables.map((t) => t.x));
               break;
-            case 'center':
+            case 'center': {
               const minX = Math.min(...tables.map((t) => t.x));
               const maxX = Math.max(...tables.map((t) => t.x + t.width));
               targetValue = (minX + maxX) / 2;
               break;
+            }
             case 'right':
               targetValue = Math.max(...tables.map((t) => t.x + t.width));
               break;
             case 'top':
               targetValue = Math.min(...tables.map((t) => t.y));
               break;
-            case 'middle':
+            case 'middle': {
               const minY = Math.min(...tables.map((t) => t.y));
               const maxY = Math.max(...tables.map((t) => t.y + t.height));
               targetValue = (minY + maxY) / 2;
               break;
+            }
             case 'bottom':
               targetValue = Math.max(...tables.map((t) => t.y + t.height));
               break;
@@ -967,6 +977,23 @@ export const useStore = create<AppState>()(
                   ? { ...t, x: newPos }
                   : { ...t, y: newPos };
               }),
+            },
+          };
+        }),
+
+      nudgeSelectedTables: (dx, dy) =>
+        set((state) => {
+          const selectedIds = state.canvas.selectedTableIds;
+          if (selectedIds.length === 0) return state;
+
+          return {
+            event: {
+              ...state.event,
+              tables: state.event.tables.map((t) =>
+                selectedIds.includes(t.id)
+                  ? { ...t, x: t.x + dx, y: t.y + dy }
+                  : t
+              ),
             },
           };
         }),
@@ -1053,6 +1080,9 @@ export const useStore = create<AppState>()(
             targetId: null,
           },
         }),
+
+      // Guest Editing Modal
+      setEditingGuest: (id) => set({ editingGuestId: id }),
 
       // Canvas Preferences
       toggleGrid: () =>
