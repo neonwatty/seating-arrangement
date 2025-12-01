@@ -5,11 +5,27 @@ import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
 import { GuestManagementView } from './components/GuestManagementView';
 import { PrintView } from './components/PrintView';
+import { GuestForm } from './components/GuestForm';
+import { ToastContainer } from './components/Toast';
+import { showToast } from './components/toastStore';
 import { useStore } from './store/useStore';
 import './App.css';
 
 function App() {
-  const { activeView, undo, redo, canUndo, canRedo } = useStore();
+  const {
+    activeView,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    canvas,
+    batchRemoveTables,
+    batchRemoveGuests,
+    nudgeSelectedTables,
+    pushHistory,
+    editingGuestId,
+    setEditingGuest,
+  } = useStore();
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
@@ -25,14 +41,66 @@ function App() {
       // Undo (Cmd/Ctrl+Z)
       if (e.key === 'z' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
         e.preventDefault();
-        if (canUndo()) undo();
+        if (canUndo()) {
+          undo();
+          showToast('Undo', 'info', { label: 'Redo', onClick: redo });
+        }
         return;
       }
 
-      // Redo (Cmd/Ctrl+Shift+Z)
-      if (e.key === 'z' && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+      // Redo (Cmd/Ctrl+Shift+Z or Cmd/Ctrl+Y)
+      if ((e.key === 'z' && (e.metaKey || e.ctrlKey) && e.shiftKey) ||
+          (e.key === 'y' && (e.metaKey || e.ctrlKey))) {
         e.preventDefault();
-        if (canRedo()) redo();
+        if (canRedo()) {
+          redo();
+          showToast('Redo', 'info', { label: 'Undo', onClick: undo });
+        }
+        return;
+      }
+
+      // Delete/Backspace to remove selected items
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const hasSelectedTables = canvas.selectedTableIds.length > 0;
+        const hasSelectedGuests = canvas.selectedGuestIds.length > 0;
+
+        if (hasSelectedTables || hasSelectedGuests) {
+          e.preventDefault();
+          const itemCount = canvas.selectedTableIds.length + canvas.selectedGuestIds.length;
+          const confirmMessage = itemCount === 1
+            ? 'Delete selected item?'
+            : `Delete ${itemCount} selected items?`;
+
+          if (confirm(confirmMessage)) {
+            pushHistory('Delete selected items');
+            if (hasSelectedTables) {
+              batchRemoveTables(canvas.selectedTableIds);
+            }
+            if (hasSelectedGuests) {
+              batchRemoveGuests(canvas.selectedGuestIds);
+            }
+            showToast(`Deleted ${itemCount} item${itemCount > 1 ? 's' : ''}`, 'success');
+          }
+        }
+        return;
+      }
+
+      // Arrow keys to nudge selected tables
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (canvas.selectedTableIds.length > 0) {
+          e.preventDefault();
+          const amount = e.shiftKey ? 1 : 10; // Fine nudge with Shift
+          let dx = 0, dy = 0;
+
+          switch (e.key) {
+            case 'ArrowUp': dy = -amount; break;
+            case 'ArrowDown': dy = amount; break;
+            case 'ArrowLeft': dx = -amount; break;
+            case 'ArrowRight': dx = amount; break;
+          }
+
+          nudgeSelectedTables(dx, dy);
+        }
         return;
       }
 
@@ -51,7 +119,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo, canUndo, canRedo]);
+  }, [undo, redo, canUndo, canRedo, canvas.selectedTableIds, canvas.selectedGuestIds, batchRemoveTables, batchRemoveGuests, nudgeSelectedTables, pushHistory]);
 
   // Show print preview
   if (showPrintPreview) {
@@ -71,6 +139,14 @@ function App() {
         )}
         {activeView === 'guests' && <GuestManagementView />}
       </div>
+
+      {/* Guest Edit Modal (global - accessible from anywhere) */}
+      {editingGuestId && (
+        <GuestForm
+          guestId={editingGuestId}
+          onClose={() => setEditingGuest(null)}
+        />
+      )}
 
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcutsHelp && (
@@ -99,6 +175,14 @@ function App() {
                   <span className="shortcut-key">Cmd+Shift+Z</span>
                   <span className="shortcut-desc">Redo</span>
                 </div>
+                <div className="shortcut-row">
+                  <span className="shortcut-key">Cmd+Y</span>
+                  <span className="shortcut-desc">Redo (alt)</span>
+                </div>
+                <div className="shortcut-row">
+                  <span className="shortcut-key">Delete</span>
+                  <span className="shortcut-desc">Delete selected</span>
+                </div>
               </div>
               <div className="shortcut-category">
                 <h3>Canvas</h3>
@@ -114,6 +198,14 @@ function App() {
                   <span className="shortcut-key">Shift+Drag</span>
                   <span className="shortcut-desc">Pan canvas</span>
                 </div>
+                <div className="shortcut-row">
+                  <span className="shortcut-key">Arrow Keys</span>
+                  <span className="shortcut-desc">Nudge tables 10px</span>
+                </div>
+                <div className="shortcut-row">
+                  <span className="shortcut-key">Shift+Arrow</span>
+                  <span className="shortcut-desc">Fine nudge 1px</span>
+                </div>
               </div>
             </div>
             <button className="close-shortcuts" onClick={() => setShowShortcutsHelp(false)}>
@@ -122,6 +214,8 @@ function App() {
           </div>
         </div>
       )}
+
+      <ToastContainer />
     </div>
   );
 }

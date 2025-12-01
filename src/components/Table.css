@@ -317,7 +317,7 @@
 }
 
 .table-count.nearly-full {
-  color: var(--color-warning);
+  color: #000000;
   background: var(--color-warning-light);
 }
 
@@ -387,7 +387,7 @@
 
 .violation-badge.preferred {
   background: var(--color-warning);
-  color: #1a1a1a;
+  color: #000000;
 }
 
 .violation-badge.required {
@@ -434,4 +434,26 @@
   box-shadow: var(--shadow-md);
   animation: popIn var(--duration-normal) var(--ease-spring);
   z-index: 100;
+}
+
+/* Availability indicator shown during drag */
+.availability-indicator {
+  position: absolute;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-success);
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  animation: popIn var(--duration-fast) var(--ease-out);
+  z-index: 100;
+}
+
+.availability-indicator.full {
+  background: var(--color-error);
 }

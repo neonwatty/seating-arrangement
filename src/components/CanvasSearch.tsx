@@ -39,7 +39,21 @@ export function CanvasSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [lastQueryForIndex, setLastQueryForIndex] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to update selected index and sync the query
+  const updateSelectedIndex = useCallback((index: number) => {
+    setSelectedIndex(index);
+    setLastQueryForIndex(query);
+  }, [query]);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setQuery('');
+    setSelectedIndex(0);
+    setLastQueryForIndex('');
+  }, []);
 
   // Global keyboard shortcut
   useEffect(() => {
@@ -57,7 +71,7 @@ export function CanvasSearch() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   // Focus input when opened
   useEffect(() => {
@@ -70,8 +84,9 @@ export function CanvasSearch() {
   const results = useMemo<SearchResult[]>(() => {
     if (!query.trim()) return [];
 
-    const guestResults: SearchResult[] = event.guests
-      .map((guest): SearchResult & { score: number } => {
+    type ScoredResult = SearchResult & { score: number };
+    const guestResults: ScoredResult[] = event.guests
+      .map((guest): ScoredResult => {
         const nameScore = fuzzyMatch(query, guest.name);
         const groupScore = guest.group ? fuzzyMatch(query, guest.group) * 0.8 : 0;
         const score = Math.max(nameScore, groupScore);
@@ -105,8 +120,8 @@ export function CanvasSearch() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
-    const tableResults: SearchResult[] = event.tables
-      .map((table): SearchResult & { score: number } => {
+    const tableResults: ScoredResult[] = event.tables
+      .map((table): ScoredResult => {
         const score = fuzzyMatch(query, table.name);
         const guestCount = event.guests.filter(g => g.tableId === table.id).length;
 
@@ -124,19 +139,11 @@ export function CanvasSearch() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
-    return [...guestResults, ...tableResults].sort((a, b) => (b as any).score - (a as any).score).slice(0, 10);
+    return [...guestResults, ...tableResults].sort((a, b) => b.score - a.score).slice(0, 10);
   }, [query, event.guests, event.tables]);
 
-  // Reset selection when results change
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [results]);
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-    setQuery('');
-    setSelectedIndex(0);
-  }, []);
+  // Compute effective selected index (reset to 0 when query changes)
+  const effectiveSelectedIndex = query !== lastQueryForIndex ? 0 : selectedIndex;
 
   const navigateToResult = useCallback((result: SearchResult) => {
     // Pan to center on result
@@ -161,13 +168,13 @@ export function CanvasSearch() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, results.length - 1));
+      updateSelectedIndex(Math.min(effectiveSelectedIndex + 1, results.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && results[selectedIndex]) {
+      updateSelectedIndex(Math.max(effectiveSelectedIndex - 1, 0));
+    } else if (e.key === 'Enter' && results[effectiveSelectedIndex]) {
       e.preventDefault();
-      navigateToResult(results[selectedIndex]);
+      navigateToResult(results[effectiveSelectedIndex]);
     }
   };
 
@@ -194,9 +201,9 @@ export function CanvasSearch() {
             {results.map((result, index) => (
               <li
                 key={`${result.type}-${result.id}`}
-                className={`search-result ${index === selectedIndex ? 'selected' : ''}`}
+                className={`search-result ${index === effectiveSelectedIndex ? 'selected' : ''}`}
                 onClick={() => navigateToResult(result)}
-                onMouseEnter={() => setSelectedIndex(index)}
+                onMouseEnter={() => updateSelectedIndex(index)}
               >
                 <span className="result-icon">
                   {result.type === 'guest' ? '👤' : '🪑'}

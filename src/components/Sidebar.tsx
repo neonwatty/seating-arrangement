@@ -5,7 +5,7 @@ import { GuestForm } from './GuestForm';
 import './Sidebar.css';
 
 export function Sidebar() {
-  const { event, sidebarOpen, toggleSidebar, selectGuest, canvas } = useStore();
+  const { event, sidebarOpen, toggleSidebar, selectGuest } = useStore();
   const [showAddGuest, setShowAddGuest] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGroup, setFilterGroup] = useState<string>('all');
@@ -155,13 +155,6 @@ export function Sidebar() {
       </div>
 
       {showAddGuest && <GuestForm onClose={() => setShowAddGuest(false)} />}
-
-      {canvas.selectedGuestIds.length === 1 && (
-        <GuestForm
-          guestId={canvas.selectedGuestIds[0]}
-          onClose={() => selectGuest(null)}
-        />
-      )}
     </div>
   );
 }

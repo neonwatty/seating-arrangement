@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { GuestForm } from './GuestForm';
 import { RelationshipMatrix } from './RelationshipMatrix';
@@ -28,15 +28,22 @@ export function GuestManagementView() {
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [selectedGuestDetail, setSelectedGuestDetail] = useState<string | null>(null);
 
-  // Get table name by ID
-  const getTableName = (tableId: string | undefined) => {
+  // Get table name by ID (for render usage)
+  const getTableName = useCallback((tableId: string | undefined) => {
     if (!tableId) return null;
     const table = event.tables.find(t => t.id === tableId);
     return table?.name || null;
-  };
+  }, [event.tables]);
 
   // Filter and sort guests
   const filteredGuests = useMemo(() => {
+    // Helper to get table name by ID (local to useMemo for correct memoization)
+    const lookupTableName = (tableId: string | undefined) => {
+      if (!tableId) return null;
+      const table = event.tables.find(t => t.id === tableId);
+      return table?.name || null;
+    };
+
     let guests = [...event.guests];
 
     // Search filter
@@ -81,8 +88,8 @@ export function GuestManagementView() {
           bVal = b.rsvpStatus;
           break;
         case 'table':
-          aVal = getTableName(a.tableId) || 'zzz';
-          bVal = getTableName(b.tableId) || 'zzz';
+          aVal = lookupTableName(a.tableId) || 'zzz';
+          bVal = lookupTableName(b.tableId) || 'zzz';
           break;
       }
 
@@ -91,7 +98,7 @@ export function GuestManagementView() {
     });
 
     return guests;
-  }, [event.guests, searchQuery, filterStatus, filterAssigned, sortColumn, sortDirection]);
+  }, [event.guests, event.tables, searchQuery, filterStatus, filterAssigned, sortColumn, sortDirection]);
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
