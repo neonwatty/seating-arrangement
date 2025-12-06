@@ -92,3 +92,49 @@
   background: var(--color-border);
   margin: 0 4px;
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .layout-toolbar {
+    top: 70px;
+    padding: 6px 12px;
+    gap: 10px;
+  }
+
+  .section-label {
+    display: none;
+  }
+
+  .layout-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-toolbar {
+    top: auto;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    gap: 8px;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+  }
+
+  .layout-toolbar-section {
+    gap: 4px;
+  }
+
+  .layout-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  .layout-btn.auto-arrange {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+}

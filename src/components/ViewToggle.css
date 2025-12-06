@@ -1,0 +1,78 @@
+.view-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.view-toggle-switch {
+  display: flex;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+}
+
+.toggle-option {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.toggle-option:hover {
+  color: var(--color-text);
+}
+
+.toggle-option.active {
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Standalone Relationships button */
+.toggle-option.relationships {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+}
+
+.toggle-option.relationships.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .toggle-option {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-size-xs);
+  }
+
+  .toggle-option.relationships {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-toggle-container {
+    gap: 0.25rem;
+  }
+
+  .view-toggle-switch {
+    padding: 0.125rem;
+  }
+
+  .toggle-option {
+    padding: 0.5rem 0.5rem;
+    min-height: 36px;
+  }
+
+  .toggle-option.relationships {
+    padding: 0.5rem 0.5rem;
+    min-height: 36px;
+  }
+}

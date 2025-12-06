@@ -205,6 +205,44 @@
   z-index: 1000;
 }
 
+/* Optimized guest animation */
+.seat-guest.optimized {
+  animation: optimizedPulse 1.2s ease-out;
+}
+
+.seat-guest.optimized .seat-guest-circle {
+  animation: optimizedGlow 1.2s ease-out;
+}
+
+@keyframes optimizedPulse {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes optimizedGlow {
+  0%, 100% {
+    box-shadow: var(--shadow-sm);
+  }
+  30%, 50% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.3);
+  }
+}
+
 .seat-guest-circle {
   width: 36px;
   height: 36px;
@@ -317,7 +355,7 @@
 }
 
 .table-count.nearly-full {
-  color: #000000;
+  color: #78350f;
   background: var(--color-warning-light);
 }
 
@@ -387,7 +425,7 @@
 
 .violation-badge.preferred {
   background: var(--color-warning);
-  color: #000000;
+  color: #78350f;
 }
 
 .violation-badge.required {

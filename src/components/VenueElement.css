@@ -113,10 +113,10 @@
 .venue-element.dance-floor .element-surface {
   background: repeating-linear-gradient(
     45deg,
-    #1a1a2e,
-    #1a1a2e 20px,
-    #16213e 20px,
-    #16213e 40px
+    #4c1d95,
+    #4c1d95 20px,
+    #7c3aed 20px,
+    #7c3aed 40px
   );
   border-style: solid;
   border-color: var(--color-secondary);

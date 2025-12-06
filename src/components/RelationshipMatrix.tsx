@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import type { RelationshipType } from '../types';
 import './RelationshipMatrix.css';
@@ -37,9 +37,50 @@ const getStrengthForType = (type: RelationshipType): number => {
 export function RelationshipMatrix() {
   const { event, addRelationship, removeRelationship } = useStore();
   const [selectedCell, setSelectedCell] = useState<{ from: string; to: string } | null>(null);
-  const [bidirectional, setBidirectional] = useState(true);
 
   const confirmedGuests = event.guests.filter((g) => g.rsvpStatus !== 'declined');
+
+  // Sort guests by table assignment for better visualization of seating optimization
+  const sortedGuests = useMemo(() => {
+    // Create a map of table order (by table name for consistent sorting)
+    const tableOrder = new Map<string, number>();
+    const sortedTables = [...event.tables].sort((a, b) => a.name.localeCompare(b.name));
+    sortedTables.forEach((table, idx) => tableOrder.set(table.id, idx));
+
+    return [...confirmedGuests].sort((a, b) => {
+      // Guests with tables come first, sorted by table
+      const aTableOrder = a.tableId ? tableOrder.get(a.tableId) ?? 999 : 1000;
+      const bTableOrder = b.tableId ? tableOrder.get(b.tableId) ?? 999 : 1000;
+
+      if (aTableOrder !== bTableOrder) {
+        return aTableOrder - bTableOrder;
+      }
+
+      // Within same table (or both unassigned), sort by name
+      return a.name.localeCompare(b.name);
+    });
+  }, [confirmedGuests, event.tables]);
+
+  // Get table boundaries for visual separators
+  const tableBoundaries = useMemo(() => {
+    const boundaries = new Set<number>();
+    let lastTableId: string | undefined = undefined;
+
+    sortedGuests.forEach((guest, idx) => {
+      if (idx > 0 && guest.tableId !== lastTableId) {
+        boundaries.add(idx);
+      }
+      lastTableId = guest.tableId;
+    });
+
+    return boundaries;
+  }, [sortedGuests]);
+
+  // Get table name for a guest
+  const getTableName = (tableId: string | undefined) => {
+    if (!tableId) return null;
+    return event.tables.find(t => t.id === tableId)?.name || null;
+  };
 
   const getRelationship = (fromId: string, toId: string) => {
     const guest = event.guests.find((g) => g.id === fromId);
@@ -49,15 +90,11 @@ export function RelationshipMatrix() {
   const setRelationship = (fromId: string, toId: string, type: RelationshipType | null) => {
     if (type === null) {
       removeRelationship(fromId, toId);
-      if (bidirectional) {
-        removeRelationship(toId, fromId);
-      }
+      removeRelationship(toId, fromId);
     } else {
       const strength = getStrengthForType(type);
       addRelationship(fromId, toId, type, strength);
-      if (bidirectional) {
-        addRelationship(toId, fromId, type, strength);
-      }
+      addRelationship(toId, fromId, type, strength);
     }
     setSelectedCell(null);
   };
@@ -79,14 +116,6 @@ export function RelationshipMatrix() {
   return (
     <div className="relationship-matrix">
       <div className="matrix-controls">
-        <label className="bidirectional-toggle">
-          <input
-            type="checkbox"
-            checked={bidirectional}
-            onChange={(e) => setBidirectional(e.target.checked)}
-          />
-          <span>Bidirectional (changes apply both ways)</span>
-        </label>
         <div className="legend">
           {RELATIONSHIP_TYPES.filter((t) => t.value).map((type) => (
             <span key={type.value} className="legend-item">
@@ -107,46 +136,61 @@ export function RelationshipMatrix() {
           {/* Header row */}
           <div className="matrix-header">
             <div className="matrix-corner"></div>
-            {confirmedGuests.map((guest) => (
-              <div
-                key={guest.id}
-                className="matrix-col-header"
-                title={guest.name}
-              >
-                {getInitials(guest.name)}
-              </div>
-            ))}
+            {sortedGuests.map((guest, colIdx) => {
+              const tableName = getTableName(guest.tableId);
+              const isBoundary = tableBoundaries.has(colIdx);
+              return (
+                <div
+                  key={guest.id}
+                  className={`matrix-col-header ${isBoundary ? 'table-boundary' : ''}`}
+                  title={`${guest.name}${tableName ? ` (${tableName})` : ' (Unassigned)'}`}
+                >
+                  {getInitials(guest.name)}
+                </div>
+              );
+            })}
           </div>
 
           {/* Data rows */}
-          {confirmedGuests.map((rowGuest) => (
-            <div key={rowGuest.id} className="matrix-row">
-              <div className="matrix-row-header" title={rowGuest.name}>
-                {rowGuest.name}
-              </div>
-              {confirmedGuests.map((colGuest) => {
-                const rel = getRelationship(rowGuest.id, colGuest.id);
-                const typeInfo = RELATIONSHIP_TYPES.find((t) => t.value === rel?.type);
-                const isDisabled = rowGuest.id === colGuest.id;
-                const isSelected =
-                  selectedCell?.from === rowGuest.id && selectedCell?.to === colGuest.id;
+          {sortedGuests.map((rowGuest, rowIdx) => {
+            const rowTableName = getTableName(rowGuest.tableId);
+            const isRowBoundary = tableBoundaries.has(rowIdx);
 
-                return (
-                  <div
-                    key={`${rowGuest.id}-${colGuest.id}`}
-                    className={`matrix-cell ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
-                    style={{
-                      backgroundColor: typeInfo?.color || 'transparent',
-                    }}
-                    onClick={() => handleCellClick(rowGuest.id, colGuest.id)}
-                    title={isDisabled ? '' : `${rowGuest.name} → ${colGuest.name}`}
-                  >
-                    {isDisabled ? '—' : typeInfo?.short || ''}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+            return (
+              <div key={rowGuest.id} className={`matrix-row ${isRowBoundary ? 'table-boundary' : ''}`}>
+                <div
+                  className="matrix-row-header"
+                  title={`${rowGuest.name}${rowTableName ? ` (${rowTableName})` : ' (Unassigned)'}`}
+                >
+                  <span className="row-name">{rowGuest.name}</span>
+                  {rowTableName && <span className="row-table">{rowTableName}</span>}
+                </div>
+                {sortedGuests.map((colGuest, colIdx) => {
+                  const rel = getRelationship(rowGuest.id, colGuest.id);
+                  const typeInfo = RELATIONSHIP_TYPES.find((t) => t.value === rel?.type);
+                  const isDisabled = rowGuest.id === colGuest.id;
+                  const isSelected =
+                    selectedCell?.from === rowGuest.id && selectedCell?.to === colGuest.id;
+                  const isSameTable = rowGuest.tableId && rowGuest.tableId === colGuest.tableId;
+                  const isColBoundary = tableBoundaries.has(colIdx);
+
+                  return (
+                    <div
+                      key={`${rowGuest.id}-${colGuest.id}`}
+                      className={`matrix-cell ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isSameTable ? 'same-table' : ''} ${isColBoundary ? 'col-boundary' : ''}`}
+                      style={{
+                        backgroundColor: typeInfo?.color || 'transparent',
+                      }}
+                      onClick={() => handleCellClick(rowGuest.id, colGuest.id)}
+                      title={isDisabled ? '' : `${rowGuest.name} → ${colGuest.name}`}
+                    >
+                      {isDisabled ? '—' : typeInfo?.short || ''}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -156,7 +200,7 @@ export function RelationshipMatrix() {
           <div className="cell-dropdown" onClick={(e) => e.stopPropagation()}>
             <h4>
               {event.guests.find((g) => g.id === selectedCell.from)?.name}
-              {bidirectional ? ' ↔ ' : ' → '}
+              {' ↔ '}
               {event.guests.find((g) => g.id === selectedCell.to)?.name}
             </h4>
             <div className="dropdown-options">

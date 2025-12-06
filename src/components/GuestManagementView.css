@@ -547,3 +547,239 @@
     flex: 1;
   }
 }
+
+@media (max-width: 768px) {
+  .gm-toolbar {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .guest-table-container {
+    padding: 0.75rem;
+  }
+
+  .guest-table th,
+  .guest-table td {
+    padding: 0.625rem 0.5rem;
+    font-size: var(--font-size-xs);
+  }
+
+  .guest-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+  }
+
+  .guest-name-cell {
+    gap: 0.5rem;
+  }
+
+  .guest-detail-panel {
+    width: 300px;
+  }
+
+  .bulk-actions-bar {
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .bulk-select,
+  .bulk-btn {
+    font-size: var(--font-size-xs);
+    padding: 0.375rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .gm-toolbar {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .search-input {
+    font-size: var(--font-size-xs);
+    padding: 0.5rem 0.75rem;
+  }
+
+  .filter-select {
+    font-size: var(--font-size-xs);
+    padding: 0.5rem;
+  }
+
+  .guest-table-container {
+    padding: 0.5rem;
+  }
+
+  .guest-table th {
+    font-size: 10px;
+    padding: 0.5rem 0.375rem;
+  }
+
+  .guest-table td {
+    padding: 0.5rem 0.375rem;
+    font-size: 11px;
+  }
+
+  .checkbox-col {
+    width: 30px;
+  }
+
+  .guest-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 9px;
+  }
+
+  .guest-name {
+    font-size: 11px;
+  }
+
+  .guest-company {
+    display: none;
+  }
+
+  .group-chip,
+  .rsvp-badge,
+  .table-badge {
+    font-size: 9px;
+    padding: 0.125rem 0.375rem;
+  }
+
+  .row-actions {
+    opacity: 1;
+  }
+
+  .action-icon-btn {
+    padding: 0.25rem 0.375rem;
+    font-size: 10px;
+  }
+
+  .guest-detail-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .detail-content {
+    padding: 1rem;
+  }
+
+  .detail-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: var(--font-size-lg);
+  }
+
+  .bulk-actions-bar {
+    padding: 0.5rem;
+  }
+
+  .selection-count {
+    font-size: var(--font-size-xs);
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-state h3 {
+    font-size: var(--font-size-base);
+  }
+
+  .empty-state p {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Hide some table columns on very small screens */
+  .guest-table th:nth-child(3),
+  .guest-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+/* Relationships Panel */
+.guest-management-view .relationships-panel {
+  position: absolute;
+  top: 56px;
+  right: 0;
+  bottom: 0;
+  background: var(--color-bg);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  animation: slideInRight 0.2s ease-out;
+  width: auto;
+  max-width: 90%;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.guest-management-view .relationships-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg-secondary);
+}
+
+.guest-management-view .relationships-panel-header h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.guest-management-view .relationships-panel-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0.25rem;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast);
+}
+
+.guest-management-view .relationships-panel-header .close-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+/* Relationships panel mobile */
+@media (max-width: 768px) {
+  .guest-management-view .relationships-panel {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .guest-management-view .relationships-panel-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .guest-management-view .relationships-panel-header h3 {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .guest-management-view .relationships-panel {
+    top: 0;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+

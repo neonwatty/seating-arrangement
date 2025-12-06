@@ -134,7 +134,7 @@
 
 .guest-group {
   font-size: 0.625rem;
-  color: #1a1a1a;
+  color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
   font-weight: var(--font-weight-bold);

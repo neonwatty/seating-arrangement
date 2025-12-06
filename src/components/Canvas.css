@@ -50,7 +50,7 @@
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   transition: all var(--duration-normal) var(--ease-bounce);
 }
 
@@ -307,11 +307,12 @@
 }
 
 .add-button {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%) !important;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%) !important;
   color: white !important;
   border-color: var(--color-primary) !important;
-  font-weight: var(--font-weight-semibold) !important;
+  font-weight: var(--font-weight-bold) !important;
   padding: 0.625rem 1.25rem !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .add-button:hover {
@@ -353,27 +354,214 @@
   background: transparent !important;
   font-size: var(--font-size-lg) !important;
   font-weight: var(--font-weight-bold) !important;
+  color: var(--color-text) !important;
 }
 
 .zoom-controls button:hover {
   background: var(--color-bg-hover) !important;
   transform: none !important;
+  color: var(--color-primary) !important;
 }
 
 /* Add Guest Button */
 .add-guest-button {
   padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
   color: white;
-  border: 2px solid var(--color-secondary);
+  border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-bounce);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .add-guest-button:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .canvas-toolbar {
+    padding: 0.625rem 1rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-group {
+    gap: 0.5rem;
+  }
+
+  .toolbar-label {
+    display: none;
+  }
+
+  .toolbar-group button {
+    padding: 0.5rem 0.75rem;
+    min-height: 40px;
+  }
+
+  .zoom-display {
+    min-width: 50px;
+    padding: 0.25rem 0.5rem;
+    font-size: var(--font-size-xs);
+  }
+
+  .zoom-controls button {
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .canvas-toolbar {
+    padding: 0.5rem;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .toolbar-group {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .toolbar-group button {
+    padding: 0.625rem;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .toolbar-divider {
+    display: none;
+  }
+
+  .add-button {
+    padding: 0.625rem 1rem !important;
+    font-size: var(--font-size-xs) !important;
+  }
+
+  .add-dropdown-menu {
+    position: fixed;
+    left: 12px !important;
+    right: 12px;
+    top: auto;
+    bottom: 70px;
+    width: auto;
+    transform: none;
+  }
+
+  .dropdown-menu {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    bottom: 70px;
+    top: auto;
+    transform: translateX(-50%);
+  }
+
+  .canvas-empty p:first-child {
+    font-size: var(--font-size-lg);
+  }
+
+  .canvas-empty p:last-child {
+    font-size: var(--font-size-sm);
+  }
+}
+
+
+/* Relationships Panel */
+.relationships-panel {
+  position: absolute;
+  top: 56px;
+  right: 0;
+  bottom: 0;
+  background: var(--color-bg);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  animation: slideInRight 0.2s ease-out;
+  width: auto;
+  max-width: 90%;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.relationships-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg-secondary);
+}
+
+.relationships-panel-header h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.relationships-panel-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0.25rem;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast);
+}
+
+.relationships-panel-header .close-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+/* Active state for toolbar button */
+.toolbar-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* Relationships panel mobile */
+@media (max-width: 768px) {
+  .relationships-panel {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .relationships-panel-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .relationships-panel-header h3 {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .relationships-panel {
+    top: 0;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+  }
+}
+

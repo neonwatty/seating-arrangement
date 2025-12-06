@@ -18,7 +18,9 @@ import { SelectionToolbar } from './SelectionToolbar';
 import { ContextMenu } from './ContextMenu';
 import type { ContextMenuItem } from './ContextMenu';
 import { LayoutToolbar } from './LayoutToolbar';
-import type { TableShape, Table, AlignmentGuide, Guest } from '../types';
+import { MainToolbar } from './MainToolbar';
+import { RelationshipMatrix } from './RelationshipMatrix';
+import type { Table, AlignmentGuide, Guest } from '../types';
 import './Canvas.css';
 
 const SNAP_THRESHOLD = 80; // pixels in canvas coordinates
@@ -256,17 +258,13 @@ export function Canvas() {
   const [nearbyTableId, setNearbyTableId] = useState<string | null>(null);
   const [swapTargetGuestId, setSwapTargetGuestId] = useState<string | null>(null);
   const [dragType, setDragType] = useState<string | null>(null);
-  const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showTableDropdown, setShowTableDropdown] = useState(false);
-  const addDropdownRef = useRef<HTMLDivElement>(null);
+  const [showRelationships, setShowRelationships] = useState(false);
   const tableDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (addDropdownRef.current && !addDropdownRef.current.contains(e.target as Node)) {
-        setShowAddDropdown(false);
-      }
       if (tableDropdownRef.current && !tableDropdownRef.current.contains(e.target as Node)) {
         setShowTableDropdown(false);
       }
@@ -278,7 +276,7 @@ export function Canvas() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 8, // Slightly larger threshold for better touch support
       },
     })
   );
@@ -476,28 +474,9 @@ export function Canvas() {
     }
   };
 
-  const handleAddTable = (shape: TableShape) => {
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      const centerX = (rect.width / 2 - canvas.panX) / canvas.zoom;
-      const centerY = (rect.height / 2 - canvas.panY) / canvas.zoom;
-      addTable(shape, centerX, centerY);
-      setShowAddDropdown(false);
-    }
-  };
-
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === canvasRef.current) {
       selectTable(null);
-    }
-  };
-
-  const handleAddGuest = () => {
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      const centerX = (rect.width / 2 - canvas.panX) / canvas.zoom;
-      const centerY = (rect.height / 2 - canvas.panY) / canvas.zoom;
-      addQuickGuest(centerX, centerY);
     }
   };
 
@@ -680,48 +659,21 @@ export function Canvas() {
 
   return (
     <div className="canvas-container">
-      <div className="canvas-toolbar">
-        {/* Add Table Dropdown */}
-        <div className="toolbar-group add-dropdown" ref={addDropdownRef}>
-          <button
-            onClick={() => setShowAddDropdown(!showAddDropdown)}
-            className="add-button"
-            title="Add Table"
-          >
-            + Add Table
-          </button>
-          {showAddDropdown && (
-            <div className="dropdown-menu add-dropdown-menu">
-              <button onClick={() => handleAddTable('round')}>
-                <span className="table-shape-icon">⭕</span> Round Table
-              </button>
-              <button onClick={() => handleAddTable('rectangle')}>
-                <span className="table-shape-icon">▭</span> Rectangle Table
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Add Guest Button */}
-        <button
-          onClick={handleAddGuest}
-          className="add-guest-button"
-          title="Add Guest"
-        >
-          + Add Guest
-        </button>
-
+      <MainToolbar
+        showRelationships={showRelationships}
+        onToggleRelationships={() => setShowRelationships(!showRelationships)}
+      >
         {/* Go to Table dropdown */}
         {event.tables.length > 0 && (
-          <div className="toolbar-group table-nav-dropdown" ref={tableDropdownRef}>
+          <div className="table-nav-dropdown" ref={tableDropdownRef}>
             <button
               onClick={() => setShowTableDropdown(!showTableDropdown)}
-              title="Go to Table"
+              className="toolbar-btn"
             >
               Go to Table
             </button>
             {showTableDropdown && (
-              <div className="dropdown-menu table-dropdown-menu">
+              <div className="dropdown-menu">
                 {event.tables.map(table => {
                   const guestCount = event.guests.filter(g => g.tableId === table.id).length;
                   const isFull = guestCount >= table.capacity;
@@ -741,15 +693,13 @@ export function Canvas() {
           </div>
         )}
 
-        <div className="toolbar-spacer" />
-
         {/* Zoom controls */}
-        <div className="toolbar-group zoom-controls">
+        <div className="zoom-controls">
           <button onClick={() => setZoom(canvas.zoom - 0.1)} title="Zoom Out">−</button>
           <span className="zoom-display">{Math.round(canvas.zoom * 100)}%</span>
           <button onClick={() => setZoom(canvas.zoom + 0.1)} title="Zoom In">+</button>
         </div>
-      </div>
+      </MainToolbar>
 
       <DndContext
         sensors={sensors}
@@ -834,7 +784,7 @@ export function Canvas() {
 
           {event.tables.length === 0 && event.guests.filter((g) => !g.tableId).length === 0 && (
             <div className="canvas-empty">
-              <h2>Welcome to SeatOptima!</h2>
+              <h2>Welcome to TableCraft!</h2>
               <p>Click "Add Table" above to create tables, then drag guests from the sidebar to assign seats.</p>
             </div>
           )}
@@ -876,6 +826,17 @@ export function Canvas() {
           items={getContextMenuItems()}
           onClose={closeContextMenu}
         />
+      )}
+
+      {/* Relationships Panel */}
+      {showRelationships && (
+        <div className="relationships-panel">
+          <div className="relationships-panel-header">
+            <h3>Guest Relationships</h3>
+            <button className="close-btn" onClick={() => setShowRelationships(false)}>×</button>
+          </div>
+          <RelationshipMatrix />
+        </div>
       )}
     </div>
   );

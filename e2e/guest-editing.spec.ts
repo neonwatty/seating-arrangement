@@ -1,19 +1,28 @@
 import { test, expect } from '@playwright/test';
 
+// Helper to enter app from landing page
+async function enterApp(page: import('@playwright/test').Page) {
+  await page.goto('/');
+  await page.click('button:has-text("Try the Demo")');
+  await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+}
+
 test.describe('Guest Editing', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await enterApp(page);
     // Clear any persisted state and set up fresh
     await page.evaluate(() => localStorage.clear());
     await page.reload();
+    // Re-enter app after reload
+    await page.click('button:has-text("Try the Demo")');
+    await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
 
     // Add a table first using the toolbar dropdown
-    await page.locator('.canvas-toolbar button:has-text("Add Table")').click();
-    await page.click('text=Round Table');
+    await page.locator('button:has-text("Add Table")').first().click();
+    await page.locator('.dropdown-menu button:has-text("Round")').click({ force: true });
 
-    // Add a guest using the toolbar button (not the sidebar one)
-    // The toolbar's "Add Guest" button has class .add-guest-button
-    await page.locator('.add-guest-button').click();
+    // Add a guest using the toolbar button
+    await page.locator('button:has-text("Add Guest")').first().click();
 
     // Wait for guest to appear on canvas
     await expect(page.locator('.canvas-guest')).toHaveCount(1, { timeout: 5000 });
@@ -37,26 +46,11 @@ test.describe('Guest Editing', () => {
     });
 
     test('double-clicking a seated guest opens the edit modal', async ({ page }) => {
-      // Drag the guest to the table to seat them
-      const guest = page.locator('.canvas-guest').first();
-      const table = page.locator('.table-component').first();
-
-      // Use drag and drop with specific source/target points
-      const guestBox = await guest.boundingBox();
-      const tableBox = await table.boundingBox();
-
-      if (guestBox && tableBox) {
-        await page.mouse.move(guestBox.x + guestBox.width / 2, guestBox.y + guestBox.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(tableBox.x + tableBox.width / 2, tableBox.y + tableBox.height / 2, { steps: 10 });
-        await page.mouse.up();
-      }
-
-      // Wait for the guest to be seated
-      await expect(page.locator('.seat-guest')).toBeVisible({ timeout: 5000 });
+      // Demo data already has seated guests, use one of them
+      const seatedGuest = page.locator('.seat-guest').first();
+      await expect(seatedGuest).toBeVisible({ timeout: 5000 });
 
       // Double-click the seated guest
-      const seatedGuest = page.locator('.seat-guest').first();
       await seatedGuest.dblclick({ force: true });
 
       // Verify the edit modal opens
@@ -115,23 +109,9 @@ test.describe('Guest Editing', () => {
     });
 
     test('right-clicking a seated guest shows context menu with Edit option', async ({ page }) => {
-      // Seat the guest first
-      const guest = page.locator('.canvas-guest').first();
-      const table = page.locator('.table-component').first();
-
-      const guestBox = await guest.boundingBox();
-      const tableBox = await table.boundingBox();
-
-      if (guestBox && tableBox) {
-        await page.mouse.move(guestBox.x + guestBox.width / 2, guestBox.y + guestBox.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(tableBox.x + tableBox.width / 2, tableBox.y + tableBox.height / 2, { steps: 10 });
-        await page.mouse.up();
-      }
-
-      await expect(page.locator('.seat-guest')).toBeVisible({ timeout: 5000 });
-
+      // Demo data already has seated guests
       const seatedGuest = page.locator('.seat-guest').first();
+      await expect(seatedGuest).toBeVisible({ timeout: 5000 });
 
       // Right-click to open context menu
       await seatedGuest.click({ button: 'right', force: true });

@@ -138,7 +138,7 @@ export function CanvasMinimap() {
         <rect
           width={MINIMAP_WIDTH}
           height={MINIMAP_HEIGHT}
-          fill="var(--color-bg-secondary)"
+          fill="var(--color-bg-hover)"
           rx={4}
         />
 
@@ -170,7 +170,7 @@ export function CanvasMinimap() {
               width={table.width * scale}
               height={table.height * scale}
               rx={table.shape === 'round' || table.shape === 'oval' ? (table.width * scale) / 2 : 2}
-              fill={isSelected ? 'var(--color-primary)' : isFull ? 'var(--color-success)' : 'var(--color-primary-light)'}
+              fill={isSelected ? 'var(--color-primary)' : isFull ? 'var(--color-success)' : 'var(--color-secondary)'}
               stroke={isSelected ? 'var(--color-primary)' : 'none'}
               strokeWidth={2}
               opacity={isSelected ? 1 : 0.8}

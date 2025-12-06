@@ -110,6 +110,12 @@ interface AppState {
   // Guest editing modal state
   editingGuestId: string | null;
 
+  // Animation state for optimization
+  animatingGuestIds: Set<string>;
+
+  // Pre-optimization snapshot for reset
+  preOptimizationSnapshot: { guestId: string; tableId: string | undefined }[] | null;
+
   // Actions - Event
   setEventName: (name: string) => void;
   setEventType: (type: Event['type']) => void;
@@ -215,39 +221,248 @@ interface AppState {
   // Computed - Constraint Violations
   getViolations: () => ConstraintViolation[];
   getViolationsForTable: (tableId: string) => ConstraintViolation[];
+
+  // Actions - Seating Optimization
+  calculateSeatingScore: () => number;
+  optimizeSeating: () => { beforeScore: number; afterScore: number; movedGuests: string[] };
+  resetSeating: () => void;
+  clearAnimatingGuests: () => void;
+  hasOptimizationSnapshot: () => boolean;
 }
 
-const createDefaultEvent = (): Event => ({
-  id: uuidv4(),
-  name: 'My Event',
-  type: 'wedding',
-  tables: [],
-  guests: [],
-  constraints: [],
-  surveyQuestions: [
-    {
-      id: uuidv4(),
-      question: 'What are your interests or hobbies?',
-      type: 'text',
-      required: false,
-    },
-    {
-      id: uuidv4(),
-      question: 'Do you know anyone else attending? If so, who?',
-      type: 'text',
-      required: false,
-    },
-    {
-      id: uuidv4(),
-      question: 'Any dietary restrictions?',
-      type: 'multiselect',
-      options: ['Vegetarian', 'Vegan', 'Gluten-free', 'Kosher', 'Halal', 'Nut allergy', 'None'],
-      required: false,
-    },
-  ],
-  surveyResponses: [],
-  venueElements: [],
-});
+const createDefaultEvent = (): Event => {
+  // Create stable IDs for demo data
+  const table1Id = 'demo-table-1';
+  const table2Id = 'demo-table-2';
+  const table3Id = 'demo-table-3';
+
+  return {
+    id: uuidv4(),
+    name: 'My Event',
+    type: 'wedding',
+    tables: [
+      {
+        id: table1Id,
+        name: 'Table 1',
+        shape: 'round',
+        x: 150,
+        y: 150,
+        width: 120,
+        height: 120,
+        capacity: 8,
+        rotation: 0,
+      },
+      {
+        id: table2Id,
+        name: 'Table 2',
+        shape: 'rectangle',
+        x: 450,
+        y: 120,
+        width: 200,
+        height: 80,
+        capacity: 10,
+        rotation: 0,
+      },
+      {
+        id: table3Id,
+        name: 'Table 3',
+        shape: 'square',
+        x: 350,
+        y: 350,
+        width: 100,
+        height: 100,
+        capacity: 8,
+        rotation: 0,
+      },
+    ],
+    guests: [
+      // Table 1 guests (4 of 8) - Family
+      {
+        id: 'demo-guest-1', name: 'Emma Wilson', tableId: table1Id, rsvpStatus: 'confirmed', group: 'Family',
+        relationships: [
+          { guestId: 'demo-guest-2', type: 'partner', strength: 5 },
+          { guestId: 'demo-guest-13', type: 'family', strength: 4 },
+        ],
+        company: 'Wilson & Associates', jobTitle: 'Partner', industry: 'Legal',
+        interests: ['golf', 'wine tasting', 'travel'], email: 'emma@wilson-law.com'
+      },
+      {
+        id: 'demo-guest-2', name: 'James Wilson', tableId: table1Id, rsvpStatus: 'confirmed', group: 'Family',
+        relationships: [
+          { guestId: 'demo-guest-1', type: 'partner', strength: 5 },
+        ],
+        company: 'City Hospital', jobTitle: 'Surgeon', industry: 'Healthcare',
+        interests: ['sailing', 'classical music'], email: 'james.wilson@cityhospital.org'
+      },
+      {
+        id: 'demo-guest-3', name: 'Olivia Chen', tableId: table1Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-4', type: 'partner', strength: 5 },
+          { guestId: 'demo-guest-7', type: 'friend', strength: 3 },
+        ],
+        company: 'Figma', jobTitle: 'Product Designer', industry: 'Technology',
+        interests: ['photography', 'hiking', 'cooking'], email: 'olivia.chen@figma.com'
+      },
+      {
+        id: 'demo-guest-4', name: 'Liam Chen', tableId: table1Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-3', type: 'partner', strength: 5 },
+        ],
+        company: 'Stripe', jobTitle: 'Software Engineer', industry: 'Technology',
+        interests: ['cycling', 'board games', 'coffee'], email: 'liam@stripe.com'
+      },
+      // Table 2 guests (6 of 10) - Work colleagues - NOTE: Sophia is separated from partner Noah for demo
+      {
+        id: 'demo-guest-5', name: 'Sophia Martinez', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Work',
+        relationships: [
+          { guestId: 'demo-guest-6', type: 'partner', strength: 5 },
+          { guestId: 'demo-guest-12', type: 'colleague', strength: 2 },
+        ],
+        company: 'Acme Corp', jobTitle: 'Marketing Director', industry: 'Consumer Goods',
+        interests: ['yoga', 'reading', 'podcasts'], email: 'sophia.m@acme.com'
+      },
+      {
+        id: 'demo-guest-6', name: 'Noah Martinez', tableId: table2Id, rsvpStatus: 'confirmed', group: 'Work',
+        relationships: [
+          { guestId: 'demo-guest-5', type: 'partner', strength: 5 },
+          { guestId: 'demo-guest-12', type: 'colleague', strength: 2 },
+        ],
+        company: 'Martinez Consulting', jobTitle: 'Founder', industry: 'Consulting',
+        interests: ['tennis', 'investing'], email: 'noah@martinezconsulting.com'
+      },
+      {
+        id: 'demo-guest-7', name: 'Ava Johnson', tableId: table2Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-8', type: 'friend', strength: 3 },
+          { guestId: 'demo-guest-11', type: 'friend', strength: 3 },
+          { guestId: 'demo-guest-3', type: 'friend', strength: 3 },
+        ],
+        company: 'Netflix', jobTitle: 'Content Strategist', industry: 'Entertainment',
+        interests: ['film', 'theater', 'writing'], email: 'ava.johnson@netflix.com'
+      },
+      {
+        id: 'demo-guest-8', name: 'Mason Lee', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-7', type: 'friend', strength: 3 },
+          { guestId: 'demo-guest-14', type: 'avoid', strength: 5 },
+        ],
+        company: 'Goldman Sachs', jobTitle: 'Vice President', industry: 'Finance',
+        interests: ['running', 'art collecting'], email: 'mason.lee@gs.com'
+      },
+      {
+        id: 'demo-guest-9', name: 'Isabella Brown', tableId: table2Id, rsvpStatus: 'pending',
+        relationships: [
+          { guestId: 'demo-guest-10', type: 'avoid', strength: 5 },
+        ],
+        company: 'Brown Architecture', jobTitle: 'Principal Architect', industry: 'Architecture',
+        interests: ['design', 'sustainable living', 'gardening'], email: 'isabella@brownarch.com'
+      },
+      {
+        id: 'demo-guest-10', name: 'Ethan Davis', tableId: table2Id, rsvpStatus: 'confirmed', group: 'Family',
+        relationships: [
+          { guestId: 'demo-guest-13', type: 'family', strength: 4 },
+          { guestId: 'demo-guest-9', type: 'avoid', strength: 5 },
+        ],
+        company: 'Stanford University', jobTitle: 'Professor', industry: 'Education',
+        interests: ['research', 'chess', 'history'], email: 'edavis@stanford.edu'
+      },
+      // Table 3 guests (8 of 8)
+      {
+        id: 'demo-guest-11', name: 'Mia Thompson', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-7', type: 'friend', strength: 3 },
+          { guestId: 'demo-guest-15', type: 'partner', strength: 5 },
+        ],
+        company: 'Spotify', jobTitle: 'Data Scientist', industry: 'Technology',
+        interests: ['music', 'machine learning', 'skiing'], email: 'mia.t@spotify.com'
+      },
+      {
+        id: 'demo-guest-12', name: 'Lucas Garcia', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Work',
+        relationships: [
+          { guestId: 'demo-guest-5', type: 'colleague', strength: 2 },
+          { guestId: 'demo-guest-6', type: 'colleague', strength: 2 },
+          { guestId: 'demo-guest-16', type: 'partner', strength: 5 },
+        ],
+        company: 'Tesla', jobTitle: 'Mechanical Engineer', industry: 'Automotive',
+        interests: ['electric vehicles', 'robotics', 'camping'], email: 'lgarcia@tesla.com'
+      },
+      {
+        id: 'demo-guest-13', name: 'Charlotte White', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Family',
+        relationships: [
+          { guestId: 'demo-guest-1', type: 'family', strength: 4 },
+          { guestId: 'demo-guest-10', type: 'family', strength: 4 },
+        ],
+        company: 'White Media Group', jobTitle: 'CEO', industry: 'Media',
+        interests: ['philanthropy', 'art', 'travel'], email: 'charlotte@whitemedia.com'
+      },
+      {
+        id: 'demo-guest-14', name: 'Benjamin Taylor', tableId: table3Id, rsvpStatus: 'confirmed',
+        relationships: [
+          { guestId: 'demo-guest-8', type: 'avoid', strength: 5 },
+        ],
+        company: 'Taylor Ventures', jobTitle: 'Managing Partner', industry: 'Venture Capital',
+        interests: ['startups', 'golf', 'wine'], email: 'ben@taylorvc.com'
+      },
+      {
+        id: 'demo-guest-15', name: 'Daniel Thompson', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-11', type: 'partner', strength: 5 },
+        ],
+        company: 'Google', jobTitle: 'Product Manager', industry: 'Technology',
+        interests: ['hiking', 'photography', 'cooking'], email: 'daniel.t@google.com'
+      },
+      {
+        id: 'demo-guest-16', name: 'Sofia Garcia', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Work',
+        relationships: [
+          { guestId: 'demo-guest-12', type: 'partner', strength: 5 },
+        ],
+        company: 'Apple', jobTitle: 'UX Designer', industry: 'Technology',
+        interests: ['design', 'yoga', 'painting'], email: 'sofia.g@apple.com'
+      },
+      {
+        id: 'demo-guest-17', name: 'Ryan Mitchell', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-18', type: 'friend', strength: 3 },
+          { guestId: 'demo-guest-11', type: 'friend', strength: 3 },
+        ],
+        company: 'Airbnb', jobTitle: 'Engineering Lead', industry: 'Technology',
+        interests: ['travel', 'rock climbing', 'craft beer'], email: 'ryan.m@airbnb.com'
+      },
+      {
+        id: 'demo-guest-18', name: 'Harper Reed', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Friends',
+        relationships: [
+          { guestId: 'demo-guest-17', type: 'friend', strength: 3 },
+        ],
+        company: 'Shopify', jobTitle: 'Solutions Architect', industry: 'Technology',
+        interests: ['gaming', 'sci-fi books', 'running'], email: 'harper.r@shopify.com'
+      },
+    ],
+    constraints: [],
+    surveyQuestions: [
+      {
+        id: uuidv4(),
+        question: 'What are your interests or hobbies?',
+        type: 'text',
+        required: false,
+      },
+      {
+        id: uuidv4(),
+        question: 'Do you know anyone else attending? If so, who?',
+        type: 'text',
+        required: false,
+      },
+      {
+        id: uuidv4(),
+        question: 'Any dietary restrictions?',
+        type: 'multiselect',
+        options: ['Vegetarian', 'Vegan', 'Gluten-free', 'Kosher', 'Halal', 'Nut allergy', 'None'],
+        required: false,
+      },
+    ],
+    surveyResponses: [],
+    venueElements: [],
+  };
+};
 
 const getTableDefaults = (shape: TableShape): { width: number; height: number; capacity: number } => {
   switch (shape) {
@@ -294,8 +509,8 @@ export const useStore = create<AppState>()(
       event: createDefaultEvent(),
       canvas: {
         zoom: 1,
-        panX: 0,
-        panY: 0,
+        panX: 100,
+        panY: 50,
         selectedTableIds: [],
         selectedGuestIds: [],
         selectedVenueElementId: null,
@@ -310,7 +525,7 @@ export const useStore = create<AppState>()(
       historyIndex: -1,
       alignmentGuides: [],
       activeView: 'canvas',
-      sidebarOpen: true,
+      sidebarOpen: false,
       contextMenu: {
         isOpen: false,
         x: 0,
@@ -319,6 +534,8 @@ export const useStore = create<AppState>()(
         targetId: null,
       },
       editingGuestId: null,
+      animatingGuestIds: new Set(),
+      preOptimizationSnapshot: null,
 
       // Event actions
       setEventName: (name) =>
@@ -1188,10 +1405,236 @@ export const useStore = create<AppState>()(
         const violations = detectConstraintViolations(get().event);
         return violations.filter(v => v.tableIds.includes(tableId));
       },
+
+      // Seating Optimization
+      calculateSeatingScore: () => {
+        const { guests } = get().event;
+        let score = 0;
+
+        for (const guest of guests) {
+          if (!guest.tableId) continue;
+
+          for (const rel of guest.relationships) {
+            const relatedGuest = guests.find(g => g.id === rel.guestId);
+            if (!relatedGuest) continue;
+
+            const sameTable = guest.tableId === relatedGuest.tableId;
+
+            switch (rel.type) {
+              case 'partner':
+                score += sameTable ? 10 : -5;
+                break;
+              case 'family':
+                score += sameTable ? 5 : 0;
+                break;
+              case 'friend':
+                score += sameTable ? 3 : 0;
+                break;
+              case 'colleague':
+                score += sameTable ? 1 : 0;
+                break;
+              case 'avoid':
+                score += sameTable ? -20 : 5;
+                break;
+            }
+          }
+        }
+
+        // Divide by 2 since relationships are bidirectional
+        return Math.round(score / 2);
+      },
+
+      optimizeSeating: () => {
+        const state = get();
+        const { guests, tables } = state.event;
+        const beforeScore = state.calculateSeatingScore();
+        const movedGuests: string[] = [];
+
+        // Save snapshot of current seating before optimization
+        const snapshot = guests.map(g => ({ guestId: g.id, tableId: g.tableId }));
+
+        // Get confirmed guests only
+        const confirmedGuests = guests.filter(g => g.rsvpStatus !== 'declined');
+
+        // Build relationship graph
+        const getRelationshipScore = (g1Id: string, g2Id: string): number => {
+          const g1 = guests.find(g => g.id === g1Id);
+          const rel = g1?.relationships.find(r => r.guestId === g2Id);
+          if (!rel) return 0;
+          switch (rel.type) {
+            case 'partner': return 10;
+            case 'family': return 5;
+            case 'friend': return 3;
+            case 'colleague': return 1;
+            case 'avoid': return -20;
+            default: return 0;
+          }
+        };
+
+        // Find partner pairs (must stay together)
+        const partnerPairs: Set<string> = new Set();
+        const processed: Set<string> = new Set();
+
+        for (const guest of confirmedGuests) {
+          if (processed.has(guest.id)) continue;
+          const partnerRel = guest.relationships.find(r => r.type === 'partner');
+          if (partnerRel) {
+            partnerPairs.add(guest.id);
+            partnerPairs.add(partnerRel.guestId);
+            processed.add(guest.id);
+            processed.add(partnerRel.guestId);
+          }
+        }
+
+        // Group guests: partner pairs together, then individuals
+        const guestGroups: string[][] = [];
+        const assigned: Set<string> = new Set();
+
+        // Add partner pairs as groups
+        for (const guest of confirmedGuests) {
+          if (assigned.has(guest.id)) continue;
+          const partnerRel = guest.relationships.find(r => r.type === 'partner');
+          if (partnerRel && confirmedGuests.find(g => g.id === partnerRel.guestId)) {
+            guestGroups.push([guest.id, partnerRel.guestId]);
+            assigned.add(guest.id);
+            assigned.add(partnerRel.guestId);
+          }
+        }
+
+        // Add remaining guests as individuals
+        for (const guest of confirmedGuests) {
+          if (!assigned.has(guest.id)) {
+            guestGroups.push([guest.id]);
+            assigned.add(guest.id);
+          }
+        }
+
+        // Sort tables by capacity (largest first)
+        const sortedTables = [...tables].sort((a, b) => b.capacity - a.capacity);
+
+        // Assign groups to tables
+        const tableAssignments: Map<string, string[]> = new Map();
+        for (const table of sortedTables) {
+          tableAssignments.set(table.id, []);
+        }
+
+        // Score a potential assignment
+        const scoreAssignment = (guestIds: string[], tableId: string): number => {
+          const currentGuests = tableAssignments.get(tableId) || [];
+          let score = 0;
+
+          // Check compatibility with existing guests at table
+          for (const guestId of guestIds) {
+            for (const existingId of currentGuests) {
+              score += getRelationshipScore(guestId, existingId);
+            }
+          }
+
+          return score;
+        };
+
+        // Greedy assignment: for each group, find best table
+        for (const group of guestGroups) {
+          let bestTable: string | null = null;
+          let bestScore = -Infinity;
+
+          for (const table of sortedTables) {
+            const currentCount = (tableAssignments.get(table.id) || []).length;
+            if (currentCount + group.length > table.capacity) continue;
+
+            const score = scoreAssignment(group, table.id);
+            if (score > bestScore) {
+              bestScore = score;
+              bestTable = table.id;
+            }
+          }
+
+          if (bestTable) {
+            const current = tableAssignments.get(bestTable) || [];
+            tableAssignments.set(bestTable, [...current, ...group]);
+          }
+        }
+
+        // First pass: identify moved guests
+        for (const guest of guests) {
+          for (const [tableId, guestIds] of tableAssignments) {
+            if (guestIds.includes(guest.id)) {
+              if (guest.tableId !== tableId) {
+                movedGuests.push(guest.id);
+              }
+              break;
+            }
+          }
+        }
+
+        // Apply assignments and set animation state
+        set((state) => ({
+          event: {
+            ...state.event,
+            guests: state.event.guests.map(guest => {
+              // Find new table for this guest
+              for (const [tableId, guestIds] of tableAssignments) {
+                if (guestIds.includes(guest.id)) {
+                  return { ...guest, tableId, canvasX: undefined, canvasY: undefined };
+                }
+              }
+              return guest;
+            }),
+          },
+          animatingGuestIds: new Set(movedGuests),
+          preOptimizationSnapshot: snapshot,
+        }));
+
+        const afterScore = get().calculateSeatingScore();
+
+        console.log('Optimization complete:', { beforeScore, afterScore, movedGuests, tableAssignments: Object.fromEntries(tableAssignments) });
+        return { beforeScore, afterScore, movedGuests };
+      },
+
+      resetSeating: () => {
+        const snapshot = get().preOptimizationSnapshot;
+        console.log('resetSeating called, snapshot:', snapshot);
+        if (!snapshot) return;
+
+        // Find which guests will move back
+        const movedGuests: string[] = [];
+        const currentGuests = get().event.guests;
+        for (const entry of snapshot) {
+          const currentGuest = currentGuests.find(g => g.id === entry.guestId);
+          if (currentGuest && currentGuest.tableId !== entry.tableId) {
+            movedGuests.push(entry.guestId);
+          }
+        }
+
+        console.log('Resetting seating, movedGuests:', movedGuests);
+        set((state) => ({
+          event: {
+            ...state.event,
+            guests: state.event.guests.map(guest => {
+              const snapshotEntry = snapshot.find(s => s.guestId === guest.id);
+              if (snapshotEntry) {
+                return { ...guest, tableId: snapshotEntry.tableId };
+              }
+              return guest;
+            }),
+          },
+          animatingGuestIds: new Set(movedGuests),
+          preOptimizationSnapshot: null,
+        }));
+      },
+
+      clearAnimatingGuests: () => set({ animatingGuestIds: new Set() }),
+
+      hasOptimizationSnapshot: () => get().preOptimizationSnapshot !== null,
     }),
     {
       name: 'seating-arrangement-storage',
+      version: 7, // Increment to reset demo data with separated partners for optimization demo
       partialize: (state) => ({ event: state.event }),
+      migrate: () => {
+        // Return fresh default state when version changes
+        return { event: createDefaultEvent() };
+      },
     }
   )
 );

@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { GuestForm } from './GuestForm';
 import { RelationshipMatrix } from './RelationshipMatrix';
+import { MainToolbar } from './MainToolbar';
 import type { Guest } from '../types';
 import './GuestManagementView.css';
 
@@ -14,7 +15,7 @@ export function GuestManagementView() {
     event,
     removeGuest,
     updateGuest,
-    assignGuestToTable
+    assignGuestToTable,
   } = useStore();
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -150,62 +151,43 @@ export function GuestManagementView() {
 
   return (
     <div className="guest-management-view">
-      {/* Toolbar */}
-      <div className="gm-toolbar">
-        <div className="toolbar-left">
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search guests..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
+      <MainToolbar
+        onAddGuest={() => setShowAddGuest(true)}
+        showRelationships={viewMode === 'relationships'}
+        onToggleRelationships={() => setViewMode(viewMode === 'relationships' ? 'list' : 'relationships')}
+      >
+        {/* Search and filters */}
+        <input
+          type="text"
+          placeholder="Search guests..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
 
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Status</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="pending">Pending</option>
-            <option value="declined">Declined</option>
-          </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="filter-select"
+        >
+          <option value="all">All Status</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="pending">Pending</option>
+          <option value="declined">Declined</option>
+        </select>
 
-          <select
-            value={filterAssigned}
-            onChange={(e) => setFilterAssigned(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Guests</option>
-            <option value="assigned">Assigned</option>
-            <option value="unassigned">Unassigned</option>
-          </select>
-        </div>
+        <select
+          value={filterAssigned}
+          onChange={(e) => setFilterAssigned(e.target.value)}
+          className="filter-select"
+        >
+          <option value="all">All Guests</option>
+          <option value="assigned">Assigned</option>
+          <option value="unassigned">Unassigned</option>
+        </select>
 
-        <div className="toolbar-right">
-          <div className="view-toggle">
-            <button
-              className={viewMode === 'list' ? 'active' : ''}
-              onClick={() => setViewMode('list')}
-            >
-              Guest List
-            </button>
-            <button
-              className={viewMode === 'relationships' ? 'active' : ''}
-              onClick={() => setViewMode('relationships')}
-            >
-              Relationships
-            </button>
-          </div>
-          <span className="guest-count">{filteredGuests.length} guests</span>
-          <button className="add-guest-btn" onClick={() => setShowAddGuest(true)}>
-            + Add Guest
-          </button>
-        </div>
-      </div>
+        <span className="guest-count">{filteredGuests.length} guests</span>
+      </MainToolbar>
 
       {/* Bulk Actions */}
       {selectedGuests.size > 0 && (
@@ -258,9 +240,6 @@ export function GuestManagementView() {
       )}
 
       <div className="gm-content">
-        {viewMode === 'relationships' ? (
-          <RelationshipMatrix />
-        ) : (
         <div className="guest-table-container">
           {filteredGuests.length === 0 ? (
             <div className="empty-state">
@@ -380,7 +359,6 @@ export function GuestManagementView() {
             </table>
           )}
         </div>
-        )}
 
         {/* Detail Panel */}
         {selectedGuestData && (
@@ -468,6 +446,17 @@ export function GuestManagementView() {
           </div>
         )}
       </div>
+
+      {/* Relationships Panel */}
+      {viewMode === 'relationships' && (
+        <div className="relationships-panel">
+          <div className="relationships-panel-header">
+            <h3>Guest Relationships</h3>
+            <button className="close-btn" onClick={() => setViewMode('list')}>×</button>
+          </div>
+          <RelationshipMatrix />
+        </div>
+      )}
 
       {/* Add/Edit Guest Modal */}
       {(showAddGuest || editingGuest) && (

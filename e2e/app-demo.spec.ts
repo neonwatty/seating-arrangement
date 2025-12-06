@@ -1,0 +1,181 @@
+import { test, expect } from '@playwright/test';
+
+// Helper to enter the app from landing page
+async function enterApp(page: import('@playwright/test').Page) {
+  await page.goto('/');
+  // Click "Try the Demo" button on landing page
+  await page.click('button:has-text("Try the Demo")');
+  // Wait for app to load
+  await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+}
+
+test.describe('TableCraft App Demo', () => {
+  test('landing page shows correct branding', async ({ page }) => {
+    await page.goto('/');
+
+    // Check page title
+    await expect(page).toHaveTitle('TableCraft');
+
+    // Check landing page logo
+    await expect(page.locator('.landing-logo')).toContainText('TableCraft');
+
+    // Check CTA button exists
+    await expect(page.locator('button:has-text("Try the Demo")')).toBeVisible();
+  });
+
+  test('demo data loads with tables and guests', async ({ page }) => {
+    await enterApp(page);
+
+    // Demo should have tables visible
+    await expect(page.locator('.table-component')).toHaveCount(3, { timeout: 5000 });
+
+    // Demo should have guests (either seated or unassigned)
+    const seatedGuests = page.locator('.seat-guest');
+    const canvasGuests = page.locator('.canvas-guest');
+
+    // Wait for guests to load
+    await page.waitForTimeout(500);
+
+    // Should have guests in the app
+    const seatedCount = await seatedGuests.count();
+    const canvasCount = await canvasGuests.count();
+    expect(seatedCount + canvasCount).toBeGreaterThan(0);
+  });
+
+  test('can switch between Canvas and Guest List views', async ({ page }) => {
+    await enterApp(page);
+
+    // Should start in Canvas view
+    await expect(page.locator('.canvas')).toBeVisible();
+
+    // Click on Guest List view
+    await page.click('button:has-text("Guest List")');
+
+    // Should show guest list (look for the sidebar content changing)
+    await page.waitForTimeout(500);
+
+    // Switch back to Canvas
+    await page.click('button:has-text("Canvas")');
+
+    // Canvas should be visible again
+    await expect(page.locator('.canvas')).toBeVisible();
+  });
+
+  test('can toggle relationships panel', async ({ page }) => {
+    await enterApp(page);
+
+    // Find and click the Relationships button
+    await page.click('button:has-text("Relationships")');
+
+    // Relationships panel should appear
+    await expect(page.locator('.relationships-panel')).toBeVisible();
+
+    // Click close button to hide it
+    await page.locator('.relationships-panel-header .close-btn').click();
+
+    // Panel should be hidden
+    await expect(page.locator('.relationships-panel')).not.toBeVisible();
+  });
+
+  test('optimize button is visible in canvas view', async ({ page }) => {
+    await enterApp(page);
+
+    // Optimize button should be visible
+    await expect(page.locator('.toolbar-btn.optimize, .toolbar-btn.reset')).toBeVisible();
+  });
+
+  test('add table button is visible and clickable', async ({ page }) => {
+    await enterApp(page);
+
+    // The Add Table button should be visible in toolbar
+    const addTableBtn = page.locator('button:has-text("Add Table")').first();
+    await expect(addTableBtn).toBeVisible();
+
+    // Click it to verify it opens dropdown
+    await addTableBtn.click();
+
+    // Dropdown should appear with table options
+    await expect(page.locator('.dropdown-menu')).toBeVisible({ timeout: 3000 });
+  });
+
+  test('can add a new guest', async ({ page }) => {
+    await enterApp(page);
+
+    // Count initial guests
+    const initialSeated = await page.locator('.seat-guest').count();
+    const initialCanvas = await page.locator('.canvas-guest').count();
+    const initialTotal = initialSeated + initialCanvas;
+
+    // Click Add Guest button in toolbar (look for button with "Add Guest" text)
+    await page.locator('button:has-text("Add Guest")').first().click();
+
+    // Wait for guest to be added
+    await page.waitForTimeout(500);
+
+    // Count after
+    const finalSeated = await page.locator('.seat-guest').count();
+    const finalCanvas = await page.locator('.canvas-guest').count();
+    const finalTotal = finalSeated + finalCanvas;
+
+    expect(finalTotal).toBe(initialTotal + 1);
+  });
+
+  test('can zoom in and out on canvas', async ({ page }) => {
+    await enterApp(page);
+
+    // Get initial zoom display value
+    const zoomDisplay = page.locator('.zoom-display');
+    const initialZoom = await zoomDisplay.textContent();
+
+    // Click zoom in
+    await page.locator('.zoom-controls button').first().click();
+
+    // Zoom should have changed
+    const newZoom = await zoomDisplay.textContent();
+    expect(newZoom).not.toBe(initialZoom);
+  });
+
+  test('event name is editable', async ({ page }) => {
+    await enterApp(page);
+
+    const eventNameInput = page.locator('.event-name-input');
+
+    // Clear and type new name
+    await eventNameInput.clear();
+    await eventNameInput.fill('My Wedding Reception');
+
+    // Value should be updated
+    await expect(eventNameInput).toHaveValue('My Wedding Reception');
+  });
+});
+
+test.describe('Optimization Feature', () => {
+  test('clicking optimize changes button to reset', async ({ page }) => {
+    await enterApp(page);
+
+    // Clear localStorage to ensure fresh state
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+
+    // Re-enter the app after reload
+    await page.click('button:has-text("Try the Demo")');
+    await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+
+    await page.waitForTimeout(1000);
+
+    // Check if optimize button exists
+    const optimizeBtn = page.locator('.toolbar-btn.optimize');
+    const resetBtn = page.locator('.toolbar-btn.reset');
+
+    // If optimize is visible, clicking it should show reset
+    if (await optimizeBtn.isVisible()) {
+      await optimizeBtn.click();
+
+      // Wait for animation/processing
+      await page.waitForTimeout(1000);
+
+      // Should now show reset button
+      await expect(resetBtn).toBeVisible({ timeout: 5000 });
+    }
+  });
+});

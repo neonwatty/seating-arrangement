@@ -7,8 +7,15 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-border);
   animation: fadeInUp var(--duration-normal) var(--ease-out);
+}
+
+@media (prefers-color-scheme: dark) {
+  .canvas-minimap {
+    background: #2a2420;
+    border-color: var(--color-primary);
+  }
 }
 
 @keyframes fadeInUp {

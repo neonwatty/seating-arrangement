@@ -8,6 +8,7 @@ import { PrintView } from './components/PrintView';
 import { GuestForm } from './components/GuestForm';
 import { ToastContainer } from './components/Toast';
 import { showToast } from './components/toastStore';
+import { LandingPage } from './components/LandingPage';
 import { useStore } from './store/useStore';
 import './App.css';
 
@@ -26,6 +27,7 @@ function App() {
     editingGuestId,
     setEditingGuest,
   } = useStore();
+  const [showLanding, setShowLanding] = useState(true);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
@@ -121,6 +123,11 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo, canUndo, canRedo, canvas.selectedTableIds, canvas.selectedGuestIds, batchRemoveTables, batchRemoveGuests, nudgeSelectedTables, pushHistory]);
 
+  // Show landing page
+  if (showLanding) {
+    return <LandingPage onEnterApp={() => setShowLanding(false)} />;
+  }
+
   // Show print preview
   if (showPrintPreview) {
     return <PrintView onClose={() => setShowPrintPreview(false)} />;
@@ -128,7 +135,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header />
+      <Header onLogoClick={() => setShowLanding(true)} />
       <div className="main-content">
         {activeView === 'dashboard' && <DashboardView />}
         {activeView === 'canvas' && (

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useStore } from '../store/useStore';
 import { getGroupColor } from './groupColors';
@@ -33,7 +33,19 @@ const DIETARY_ICONS: Record<string, string> = {
 };
 
 function SeatGuest({ guest, seatPosition, tablePosition, isSwapTarget }: SeatGuestProps) {
-  const { setEditingGuest, openContextMenu } = useStore();
+  const { setEditingGuest, openContextMenu, animatingGuestIds, clearAnimatingGuests } = useStore();
+  const isAnimating = animatingGuestIds.has(guest.id);
+
+  // Clear animation state after animation completes
+  useEffect(() => {
+    if (isAnimating) {
+      const timer = setTimeout(() => {
+        clearAnimatingGuests();
+      }, 1500); // Animation duration + buffer
+      return () => clearTimeout(timer);
+    }
+  }, [isAnimating, clearAnimatingGuests]);
+
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: guest.id,
     data: {
@@ -96,7 +108,7 @@ function SeatGuest({ guest, seatPosition, tablePosition, isSwapTarget }: SeatGue
   return (
     <div
       ref={setNodeRef}
-      className={`seat-guest ${isDragging ? 'dragging' : ''} ${groupColor ? 'has-group' : ''} ${isSwapTarget ? 'swap-target' : ''}`}
+      className={`seat-guest ${isDragging ? 'dragging' : ''} ${groupColor ? 'has-group' : ''} ${isSwapTarget ? 'swap-target' : ''} ${isAnimating ? 'optimized' : ''}`}
       title={tooltipParts.join('\n')}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
