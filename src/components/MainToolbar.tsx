@@ -68,16 +68,9 @@ export function MainToolbar({ children, onAddGuest, showRelationships, onToggleR
 
   const handleAddTable = (shape: TableShape) => {
     const tableNumber = event.tables.length + 1;
-    addTable({
-      name: `Table ${tableNumber}`,
-      shape,
-      capacity: shape === 'round' ? 8 : 6,
-      x: 400 + (tableNumber * 50) % 200,
-      y: 300 + (tableNumber * 30) % 150,
-      width: shape === 'round' ? 120 : 160,
-      height: shape === 'round' ? 120 : 100,
-      rotation: 0,
-    });
+    const x = 400 + (tableNumber * 50) % 200;
+    const y = 300 + (tableNumber * 30) % 150;
+    addTable(shape, x, y);
     setShowAddDropdown(false);
   };
 
