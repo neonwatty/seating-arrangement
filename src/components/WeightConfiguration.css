@@ -1,0 +1,186 @@
+/* Weight Configuration Component */
+
+.weight-configuration {
+  padding: 1rem;
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+}
+
+.weight-configuration h3 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weight-section {
+  margin-bottom: 1.25rem;
+}
+
+.weight-section h4 {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Weight Slider */
+.weight-slider {
+  margin-bottom: 0.75rem;
+}
+
+.weight-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.375rem;
+}
+
+.weight-slider-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.weight-slider-value {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.weight-slider-value.negative {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.weight-slider input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  appearance: none;
+  cursor: pointer;
+}
+
+.weight-slider input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out);
+  box-shadow: var(--shadow-sm);
+}
+
+.weight-slider input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.weight-slider input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  cursor: pointer;
+}
+
+/* Presets */
+.weight-presets {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.weight-presets label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-right: 0.5rem;
+}
+
+.preset-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.preset-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.preset-btn.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Collapsible section */
+.weight-config-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.weight-config-toggle:hover {
+  border-color: var(--color-primary);
+}
+
+.weight-config-toggle .toggle-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weight-config-toggle .toggle-icon {
+  font-size: var(--font-size-xs);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.weight-config-toggle.open .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.weight-config-content {
+  margin-top: 0.75rem;
+  animation: slideDown var(--duration-fast) var(--ease-out);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

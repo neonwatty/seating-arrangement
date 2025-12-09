@@ -147,3 +147,121 @@ export interface ConstraintViolation {
   guestIds: string[];
   tableIds: string[];
 }
+
+// ===== Optimization Types =====
+
+export interface OptimizationWeights {
+  relationships: {
+    partner: number;      // Default: 100
+    family: number;       // Default: 50
+    friend: number;       // Default: 30
+    colleague: number;    // Default: 10
+    acquaintance: number; // Default: 5
+    avoid: number;        // Default: -200
+  };
+  constraints: {
+    required: number;     // Default: 1000
+    preferred: number;    // Default: 50
+    optional: number;     // Default: 10
+  };
+  groupCohesion: number;  // Default: 40
+  interestMatch: number;  // Default: 5
+}
+
+export interface ScoreReason {
+  type: 'relationship' | 'constraint' | 'group' | 'interest' | 'penalty';
+  description: string;
+  points: number;
+  involvedGuestIds?: string[];
+}
+
+export interface AssignmentScore {
+  guestId: string;
+  tableId: string;
+  totalScore: number;
+  breakdown: {
+    relationshipScore: number;
+    constraintScore: number;
+    groupCohesionScore: number;
+    interestScore: number;
+    reasons: ScoreReason[];
+  };
+}
+
+export interface TableOptimizationScore {
+  tableId: string;
+  tableName: string;
+  compatibilityScore: number;
+  guestCount: number;
+  capacity: number;
+  issues: string[];
+  guestScores: AssignmentScore[];
+}
+
+export interface OptimizationViolation {
+  severity: 'critical' | 'warning' | 'info';
+  message: string;
+  guestIds: string[];
+  constraintId?: string;
+}
+
+export interface OptimizationResult {
+  proposedAssignments: Map<string, string>;
+  currentAssignments: Map<string, string | undefined>;
+  totalScore: number;
+  previousScore: number;
+  scoreImprovement: number;
+  assignmentScores: AssignmentScore[];
+  tableScores: Map<string, TableOptimizationScore>;
+  violations: OptimizationViolation[];
+  movedGuests: string[];
+}
+
+export interface OptimizationOptions {
+  selectedGuestIds?: string[];
+  selectedTableIds?: string[];
+  preserveCurrentAssignments?: boolean;
+  maxIterations?: number;
+}
+
+// Optimization weight presets
+export type OptimizationPreset = 'wedding' | 'corporate' | 'networking' | 'custom';
+
+export const DEFAULT_OPTIMIZATION_WEIGHTS: OptimizationWeights = {
+  relationships: {
+    partner: 100,
+    family: 50,
+    friend: 30,
+    colleague: 10,
+    acquaintance: 5,
+    avoid: -200,
+  },
+  constraints: {
+    required: 1000,
+    preferred: 50,
+    optional: 10,
+  },
+  groupCohesion: 40,
+  interestMatch: 5,
+};
+
+export const OPTIMIZATION_PRESETS: Record<Exclude<OptimizationPreset, 'custom'>, OptimizationWeights> = {
+  wedding: {
+    relationships: { partner: 200, family: 80, friend: 40, colleague: 10, acquaintance: 5, avoid: -300 },
+    constraints: { required: 1000, preferred: 60, optional: 15 },
+    groupCohesion: 60,
+    interestMatch: 3,
+  },
+  corporate: {
+    relationships: { partner: 50, family: 20, friend: 30, colleague: 40, acquaintance: 10, avoid: -150 },
+    constraints: { required: 1000, preferred: 50, optional: 10 },
+    groupCohesion: 30,
+    interestMatch: 8,
+  },
+  networking: {
+    relationships: { partner: 30, family: 10, friend: 20, colleague: 15, acquaintance: 5, avoid: -100 },
+    constraints: { required: 1000, preferred: 40, optional: 10 },
+    groupCohesion: 10,
+    interestMatch: 15,
+  },
+};
