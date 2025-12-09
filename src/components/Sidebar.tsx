@@ -4,6 +4,7 @@ import { useIsMobile } from '../hooks/useResponsive';
 import { GuestChip } from './GuestChip';
 import { GuestForm } from './GuestForm';
 import { GroupLegend } from './GroupLegend';
+import { EmptyState, EmptyGuestsIllustration, AllAssignedIllustration, SearchNoResultsIllustration } from './empty-states';
 import './Sidebar.css';
 
 export function Sidebar() {
@@ -145,12 +146,41 @@ export function Sidebar() {
                 onClick={() => selectGuest(guest.id)}
               />
             ))}
-            {unassignedGuests.length === 0 && (
-              <p className="empty-message">
-                {filteredGuests.length === 0
-                  ? 'No guests match your filters'
-                  : 'All guests are assigned!'}
-              </p>
+            {unassignedGuests.length === 0 && event.guests.length === 0 && (
+              <EmptyState
+                variant="compact"
+                illustration={<EmptyGuestsIllustration />}
+                title="No Guests Yet"
+                description="Add guests to start planning your seating arrangement."
+                action={{
+                  label: 'Add Guest',
+                  onClick: () => setShowAddGuest(true),
+                }}
+              />
+            )}
+            {unassignedGuests.length === 0 && event.guests.length > 0 && filteredGuests.length === 0 && (
+              <EmptyState
+                variant="compact"
+                illustration={<SearchNoResultsIllustration />}
+                title="No Matches"
+                description="Try adjusting your search or filters."
+                action={{
+                  label: 'Clear Filters',
+                  onClick: () => {
+                    setSearchTerm('');
+                    setFilterGroup('all');
+                    setFilterStatus('all');
+                  },
+                }}
+              />
+            )}
+            {unassignedGuests.length === 0 && filteredGuests.length > 0 && (
+              <EmptyState
+                variant="compact"
+                illustration={<AllAssignedIllustration />}
+                title="All Guests Seated!"
+                description="Everyone has been assigned a table."
+              />
             )}
           </div>
         </div>

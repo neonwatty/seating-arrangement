@@ -119,6 +119,14 @@ interface AppState {
   // Pre-optimization snapshot for reset
   preOptimizationSnapshot: { guestId: string; tableId: string | undefined }[] | null;
 
+  // Celebration state
+  showCelebration: boolean;
+  celebrationStats: {
+    guestsSeated: number;
+    tablesUsed: number;
+    score?: number;
+  } | null;
+
   // Actions - Event
   setEventName: (name: string) => void;
   setEventType: (type: Event['type']) => void;
@@ -238,6 +246,11 @@ interface AppState {
   resetSeating: () => void;
   clearAnimatingGuests: () => void;
   hasOptimizationSnapshot: () => boolean;
+
+  // Actions - Celebration
+  triggerCelebration: () => void;
+  dismissCelebration: () => void;
+  setCelebrationStats: (stats: { guestsSeated: number; tablesUsed: number; score?: number }) => void;
 }
 
 const createDefaultEvent = (): Event => {
@@ -547,6 +560,8 @@ export const useStore = create<AppState>()(
       editingGuestId: null,
       animatingGuestIds: new Set(),
       preOptimizationSnapshot: null,
+      showCelebration: false,
+      celebrationStats: null,
 
       // Event actions
       setEventName: (name) =>
@@ -1700,6 +1715,11 @@ export const useStore = create<AppState>()(
       clearAnimatingGuests: () => set({ animatingGuestIds: new Set() }),
 
       hasOptimizationSnapshot: () => get().preOptimizationSnapshot !== null,
+
+      // Celebration actions
+      triggerCelebration: () => set({ showCelebration: true }),
+      dismissCelebration: () => set({ showCelebration: false, celebrationStats: null }),
+      setCelebrationStats: (stats) => set({ celebrationStats: stats }),
     }),
     {
       name: 'seating-arrangement-storage',

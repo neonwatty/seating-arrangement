@@ -23,6 +23,7 @@ import { LayoutToolbar } from './LayoutToolbar';
 import { MainToolbar } from './MainToolbar';
 import { GridControls } from './GridControls';
 import { RelationshipMatrix } from './RelationshipMatrix';
+import { EmptyState, EmptyCanvasIllustration, NoTablesIllustration } from './empty-states';
 import type { Table, AlignmentGuide, Guest } from '../types';
 import './Canvas.css';
 
@@ -867,10 +868,28 @@ export function Canvas() {
           )}
 
           {event.tables.length === 0 && event.guests.filter((g) => !g.tableId).length === 0 && (
-            <div className="canvas-empty">
-              <h2>Welcome to TableCraft!</h2>
-              <p>Click "Add Table" above to create tables, then drag guests from the sidebar to assign seats.</p>
-            </div>
+            <EmptyState
+              variant="canvas-empty"
+              illustration={<EmptyCanvasIllustration />}
+              title="Welcome to TableCraft!"
+              description="Create tables and arrange your floor plan. Then drag guests to assign seats."
+              action={{
+                label: 'Add Your First Table',
+                onClick: () => addTable('round', 200, 150),
+              }}
+            />
+          )}
+          {event.tables.length === 0 && event.guests.filter((g) => !g.tableId).length > 0 && (
+            <EmptyState
+              variant="canvas-empty"
+              illustration={<NoTablesIllustration />}
+              title="No Tables Yet"
+              description="You have guests ready to be seated. Add tables to start arranging."
+              action={{
+                label: 'Add a Table',
+                onClick: () => addTable('round', 200, 150),
+              }}
+            />
           )}
         </div>
 

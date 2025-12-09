@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import type { Guest, Table, Constraint } from '../types';
+import { SkeletonOptimization } from './Skeleton';
 import './OptimizeView.css';
+
+// Export celebration stats type for use by CelebrationOverlay
+export interface CelebrationStats {
+  guestsSeated: number;
+  tablesUsed: number;
+  score?: number;
+}
 
 interface OptimizationResult {
   assignments: Map<string, string>; // guestId -> tableId
@@ -17,7 +25,7 @@ interface OptimizationResult {
 }
 
 export function OptimizeView() {
-  const { event, assignGuestToTable, addConstraint, removeConstraint } = useStore();
+  const { event, assignGuestToTable, addConstraint, removeConstraint, triggerCelebration, setCelebrationStats } = useStore();
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [newConstraint, setNewConstraint] = useState({
@@ -53,6 +61,18 @@ export function OptimizeView() {
     result.assignments.forEach((tableId, guestId) => {
       assignGuestToTable(guestId, tableId);
     });
+
+    // Calculate celebration stats
+    const guestsSeated = result.assignments.size;
+    const tablesUsed = new Set(result.assignments.values()).size;
+
+    // Trigger celebration with stats
+    setCelebrationStats({
+      guestsSeated,
+      tablesUsed,
+      score: Math.round(result.score),
+    });
+    triggerCelebration();
 
     setResult(null);
   };
@@ -148,7 +168,11 @@ export function OptimizeView() {
           {isOptimizing ? 'Optimizing...' : 'Run Optimization'}
         </button>
 
-        {result && (
+        {isOptimizing && (
+          <SkeletonOptimization />
+        )}
+
+        {result && !isOptimizing && (
           <div className="result-panel enhanced">
             <div className="result-header">
               <div className="score-circle-container">

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useStore } from '../store/useStore';
 import { getGroupColor } from './groupColors';
@@ -128,6 +128,7 @@ export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTa
   const violations = getViolationsForTable(table.id);
   const hasViolations = violations.length > 0;
   const hasRequiredViolations = violations.some(v => v.priority === 'required');
+  const [isSettling, setIsSettling] = useState(false);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: table.id,
@@ -179,6 +180,18 @@ export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTa
     activeTransform = null;
   }
   /* eslint-enable react-hooks/refs */
+
+  // Settling animation when drag ends
+  useEffect(() => {
+    if (!isDragging && wasDraggingRef.current && !isSettling) {
+      setIsSettling(true);
+      const timer = setTimeout(() => {
+        setIsSettling(false);
+        wasDraggingRef.current = false;
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isDragging, isSettling]);
 
   const seatPositions = getSeatPositions(table.shape, table.capacity, table.width, table.height);
 
@@ -269,7 +282,7 @@ export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTa
         setDroppableRef(node);
         setDraggableRef(node);
       }}
-      className={`table-component ${table.shape} ${isSelected ? 'selected' : ''} ${isOver ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${isSnapTarget ? 'snap-target' : ''} capacity-${capacityStatus} ${hasViolations ? 'has-violations' : ''} ${hasRequiredViolations ? 'has-required-violations' : ''}`}
+      className={`table-component ${table.shape} ${isSelected ? 'selected' : ''} ${isOver ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${isSettling ? 'settling' : ''} ${isSnapTarget ? 'snap-target' : ''} capacity-${capacityStatus} ${hasViolations ? 'has-violations' : ''} ${hasRequiredViolations ? 'has-required-violations' : ''}`}
       style={{
         left: table.x,
         top: table.y,

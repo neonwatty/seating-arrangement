@@ -9,6 +9,7 @@ import { GuestForm } from './components/GuestForm';
 import { ToastContainer } from './components/Toast';
 import { showToast } from './components/toastStore';
 import { LandingPage } from './components/LandingPage';
+import { CelebrationOverlay } from './components/CelebrationOverlay';
 import { useStore } from './store/useStore';
 import './App.css';
 
@@ -223,6 +224,7 @@ function App() {
       )}
 
       <ToastContainer />
+      <CelebrationOverlay />
     </div>
   );
 }

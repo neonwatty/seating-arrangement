@@ -1,0 +1,185 @@
+/* Empty State Component Styles */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  animation: emptyStateIn 0.4s var(--ease-out);
+}
+
+@keyframes emptyStateIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-state-illustration {
+  width: 180px;
+  height: 120px;
+  margin-bottom: 1.5rem;
+}
+
+.empty-state-illustration svg {
+  width: 100%;
+  height: 100%;
+}
+
+.empty-state-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-description {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  max-width: 300px;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.empty-state-action {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  box-shadow: var(--shadow-md);
+}
+
+.empty-state-action:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.empty-state-action:active {
+  transform: translateY(0);
+}
+
+.empty-state-secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  margin-top: 0.75rem;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.empty-state-secondary:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Compact variant for sidebars/panels */
+.empty-state.compact {
+  padding: 1.5rem 1rem;
+}
+
+.empty-state.compact .empty-state-illustration {
+  width: 120px;
+  height: 80px;
+  margin-bottom: 1rem;
+}
+
+.empty-state.compact .empty-state-title {
+  font-size: var(--font-size-base);
+}
+
+.empty-state.compact .empty-state-description {
+  font-size: var(--font-size-sm);
+  margin-bottom: 1rem;
+}
+
+.empty-state.compact .empty-state-action {
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-sm);
+}
+
+/* Inline variant for within other components */
+.empty-state.inline {
+  flex-direction: row;
+  gap: 1.5rem;
+  padding: 1rem;
+  text-align: left;
+}
+
+.empty-state.inline .empty-state-illustration {
+  width: 80px;
+  height: 60px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.empty-state.inline .empty-state-content {
+  flex: 1;
+}
+
+.empty-state.inline .empty-state-title {
+  font-size: var(--font-size-base);
+  margin-bottom: 0.25rem;
+}
+
+.empty-state.inline .empty-state-description {
+  margin-bottom: 0.75rem;
+}
+
+/* Canvas specific empty state */
+.empty-state.canvas-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-bg);
+  padding: 3rem;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border-light);
+  z-index: 10;
+}
+
+/* Illustration animation */
+.empty-illustration {
+  animation: illustrationFloat 3s ease-in-out infinite;
+}
+
+@keyframes illustrationFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Pulse animation for plus icons */
+.empty-illustration .pulse-icon {
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}

@@ -19,6 +19,33 @@
   transition: none;
 }
 
+/* Lift effect when starting to drag */
+.table-component.dragging .table-surface {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Settling animation when drag ends */
+.table-component.settling {
+  transition: transform var(--duration-normal) var(--ease-spring);
+}
+
+.table-component.settling .table-surface {
+  animation: tableSettle var(--duration-normal) var(--ease-spring);
+}
+
+@keyframes tableSettle {
+  0% {
+    transform: scale(1.02);
+  }
+  60% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .table-component.selected {
   z-index: 10;
 }
@@ -203,6 +230,23 @@
 .seat-guest.dragging {
   opacity: 0.5;
   z-index: 1000;
+}
+
+/* Guest pickup animation */
+.seat-guest.dragging .seat-guest-circle {
+  animation: guestPickup var(--duration-fast) var(--ease-spring) forwards;
+}
+
+@keyframes guestPickup {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1.1);
+  }
 }
 
 .seat-guest.dimmed {
