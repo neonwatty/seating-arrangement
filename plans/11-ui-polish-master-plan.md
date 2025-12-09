@@ -150,18 +150,23 @@ This plan focuses on transforming SeatOptima from an MVP into a polished, profes
 - `src/components/Sidebar.tsx` / `.css` - Mobile drawer, backdrop
 - `src/App.tsx` - Mobile layout logic
 
-### 3.3 Mobile-Optimized Table Management 🔲 NOT STARTED
+### 3.3 Mobile-Optimized Table Management ✅ COMPLETED
 **Why**: Current table property panel is cramped on mobile.
 
-**To Implement**:
-- Full-screen table editor modal on mobile
-- Swipe between tables for quick editing
-- Large, thumb-friendly controls
-- Quick actions row (delete, duplicate, rotate)
+**Implemented**:
+- ✅ Bottom sheet panel with swipe-to-dismiss gesture
+- ✅ Drag handle for visual affordance
+- ✅ Table navigation (prev/next) with counter
+- ✅ Quick actions bar (Duplicate, Rotate 45°, Delete)
+- ✅ Collapsible "Advanced Settings" for size/dimensions
+- ✅ 44px minimum touch targets
+- ✅ Backdrop overlay on mobile
+- ✅ Safe area inset padding
 
-**Files to modify**:
-- `src/components/TablePropertiesPanel.tsx` - Mobile mode
-- `src/components/TablePropertiesPanel.css` - Mobile styles
+**Files**:
+- `src/components/TablePropertiesPanel.tsx` - Complete mobile rewrite
+- `src/components/TablePropertiesPanel.css` - Mobile styles, touch targets
+- `src/store/useStore.ts` - Added `duplicateTable()`, `rotateTable()`
 
 ---
 
