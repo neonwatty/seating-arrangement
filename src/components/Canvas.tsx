@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -263,7 +263,64 @@ export function Canvas() {
   const [dragType, setDragType] = useState<string | null>(null);
   const [showTableDropdown, setShowTableDropdown] = useState(false);
   const [showRelationships, setShowRelationships] = useState(false);
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
   const tableDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Re-center canvas to fit all tables in view
+  const handleRecenter = useCallback(() => {
+    const tables = event.tables;
+    if (tables.length === 0) {
+      // No tables, reset to default view
+      setPan(50, 20);
+      setZoom(1);
+      return;
+    }
+
+    // Calculate bounding box of all tables
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const table of tables) {
+      minX = Math.min(minX, table.x);
+      minY = Math.min(minY, table.y);
+      maxX = Math.max(maxX, table.x + table.width);
+      maxY = Math.max(maxY, table.y + table.height);
+    }
+
+    // Add padding
+    const padding = 100;
+    minX -= padding;
+    minY -= padding;
+    maxX += padding;
+    maxY += padding;
+
+    // Get canvas dimensions (approximate if ref not available)
+    const canvasWidth = canvasRef.current?.clientWidth || 800;
+    const canvasHeight = canvasRef.current?.clientHeight || 600;
+
+    // Calculate zoom to fit
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    const zoomX = canvasWidth / contentWidth;
+    const zoomY = canvasHeight / contentHeight;
+    const newZoom = Math.min(Math.max(Math.min(zoomX, zoomY), 0.25), 2); // Clamp between 0.25 and 2
+
+    // Calculate pan to center content
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const newPanX = (canvasWidth / 2) - (centerX * newZoom);
+    const newPanY = (canvasHeight / 2) - (centerY * newZoom);
+
+    setZoom(newZoom);
+    setPan(newPanX, newPanY);
+  }, [event.tables, setPan, setZoom]);
+
+  // Auto-center canvas on initial mount - use useLayoutEffect to prevent jitter
+  useLayoutEffect(() => {
+    if (event.tables.length > 0) {
+      handleRecenter();
+    }
+    setIsCanvasReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -779,6 +836,7 @@ export function Canvas() {
           <button onClick={() => setZoom(canvas.zoom - 0.1)} title="Zoom Out">−</button>
           <span className="zoom-display">{Math.round(canvas.zoom * 100)}%</span>
           <button onClick={() => setZoom(canvas.zoom + 0.1)} title="Zoom In">+</button>
+          <button onClick={handleRecenter} className="recenter-btn has-tooltip" data-tooltip="Re-center">⌖</button>
         </div>
       </MainToolbar>
 
@@ -808,6 +866,7 @@ export function Canvas() {
             style={{
               transform: `translate(${canvas.panX}px, ${canvas.panY}px) scale(${canvas.zoom})`,
               transformOrigin: '0 0',
+              opacity: isCanvasReady ? 1 : 0,
             }}
           >
             {event.tables.map((table) => (
