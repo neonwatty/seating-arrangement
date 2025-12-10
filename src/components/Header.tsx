@@ -5,9 +5,10 @@ import './Header.css';
 
 interface HeaderProps {
   onLogoClick?: () => void;
+  onShowHelp?: () => void;
 }
 
-export function Header({ onLogoClick }: HeaderProps) {
+export function Header({ onLogoClick, onShowHelp }: HeaderProps) {
   const { event, setEventName } = useStore();
 
   return (
@@ -21,6 +22,15 @@ export function Header({ onLogoClick }: HeaderProps) {
         >TableCraft</h1>
         <span className="version-badge">v{version}</span>
         <UpdatesButton variant="header" />
+        {onShowHelp && (
+          <button
+            className="help-btn"
+            onClick={onShowHelp}
+            title="Keyboard Shortcuts (?)"
+          >
+            ?
+          </button>
+        )}
         <div className="event-info">
           <input
             type="text"
