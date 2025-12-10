@@ -37,6 +37,15 @@
   color: var(--color-primary-hover);
 }
 
+.version-badge {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+}
+
 .event-info {
   display: flex;
   align-items: center;

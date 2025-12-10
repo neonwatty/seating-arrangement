@@ -1,4 +1,6 @@
 import './LandingPage.css';
+import { version } from '../../package.json';
+import { UpdatesButton } from './UpdatesPopup';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -114,6 +116,10 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
         {/* Footer */}
         <footer className="landing-footer">
           <p>Made for event planners</p>
+          <div className="footer-meta">
+            <UpdatesButton variant="landing" />
+            <span className="version-tag">v{version}</span>
+          </div>
         </footer>
       </div>
     </div>
