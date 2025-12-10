@@ -135,7 +135,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header onLogoClick={() => setShowLanding(true)} />
+      <Header onLogoClick={() => setShowLanding(true)} onShowHelp={() => setShowShortcutsHelp(true)} />
       <div className="main-content">
         {activeView === 'dashboard' && <DashboardView />}
         {activeView === 'canvas' && (
