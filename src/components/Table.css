@@ -533,3 +533,44 @@
   font-weight: var(--font-weight-bold);
   color: var(--color-text-secondary);
 }
+
+/* Newly added table highlight animation */
+.table-component.newly-added {
+  animation: newTablePulse 1.5s ease-out;
+}
+
+.table-component.newly-added .table-surface {
+  animation: newTableGlow 1.5s ease-out;
+}
+
+@keyframes newTablePulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(0.98);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes newTableGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(249, 112, 102, 0.7), var(--shadow-lg);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(249, 112, 102, 0), var(--shadow-xl);
+  }
+  100% {
+    box-shadow: var(--shadow-lg);
+  }
+}

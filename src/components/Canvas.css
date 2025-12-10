@@ -618,3 +618,47 @@
   }
 }
 
+/* Selection Rectangle (Marquee) */
+.selection-rectangle {
+  position: absolute;
+  border: 2px dashed var(--color-primary);
+  background: rgba(249, 112, 102, 0.1);
+  pointer-events: none;
+  z-index: 50;
+  border-radius: var(--radius-sm);
+  animation: marching-ants 0.5s linear infinite;
+}
+
+@keyframes marching-ants {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 16;
+  }
+}
+
+/* Alternative marching ants using background for dashed border */
+.selection-rectangle {
+  background-image:
+    linear-gradient(90deg, var(--color-primary) 50%, transparent 50%),
+    linear-gradient(90deg, var(--color-primary) 50%, transparent 50%),
+    linear-gradient(0deg, var(--color-primary) 50%, transparent 50%),
+    linear-gradient(0deg, var(--color-primary) 50%, transparent 50%);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: 8px 2px, 8px 2px, 2px 8px, 2px 8px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  animation: marching-ants-border 0.4s linear infinite;
+  border: none;
+  background-color: rgba(249, 112, 102, 0.08);
+}
+
+@keyframes marching-ants-border {
+  0% {
+    background-position: 0 0, 8px 100%, 0 8px, 100% 0;
+  }
+  100% {
+    background-position: 8px 0, 0 100%, 0 0, 100% 8px;
+  }
+}
+

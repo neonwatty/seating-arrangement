@@ -150,6 +150,39 @@ function findNearbyTable(x: number, y: number, tables: Table[]): Table | null {
   return null;
 }
 
+// Check if two rectangles intersect
+function rectanglesIntersect(
+  r1: { x: number; y: number; width: number; height: number },
+  r2: { x: number; y: number; width: number; height: number }
+): boolean {
+  return !(
+    r1.x + r1.width < r2.x ||
+    r2.x + r2.width < r1.x ||
+    r1.y + r1.height < r2.y ||
+    r2.y + r2.height < r1.y
+  );
+}
+
+// Find all tables that intersect with a selection rectangle
+function findTablesInSelectionRect(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  tables: Table[]
+): string[] {
+  // Normalize the selection rectangle (handle any drag direction)
+  const selectionRect = {
+    x: Math.min(start.x, end.x),
+    y: Math.min(start.y, end.y),
+    width: Math.abs(end.x - start.x),
+    height: Math.abs(end.y - start.y),
+  };
+
+  // Find intersecting tables
+  return tables
+    .filter(table => rectanglesIntersect(selectionRect, table))
+    .map(table => table.id);
+}
+
 // Calculate seat positions for a table (simplified version)
 function getSeatPositionsForTable(table: Table, capacity: number): { x: number; y: number }[] {
   const positions: { x: number; y: number }[] = [];
@@ -253,6 +286,13 @@ export function Canvas() {
     toggleTableSelection,
     toggleGuestSelection,
     setEditingGuest,
+    selectMultipleTables,
+    clearTableSelection,
+    panToPosition,
+    newlyAddedGuestId,
+    clearNewlyAddedGuest,
+    newlyAddedTableId,
+    clearNewlyAddedTable,
   } = useStore();
 
   const [isPanning, setIsPanning] = useState(false);
@@ -265,6 +305,13 @@ export function Canvas() {
   const [showRelationships, setShowRelationships] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const tableDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Marquee selection state
+  const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
+  const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null);
+  const [marqueeEnd, setMarqueeEnd] = useState<{ x: number; y: number } | null>(null);
+  const [marqueeModifier, setMarqueeModifier] = useState<'replace' | 'add'>('replace');
+  const wasMarqueeSelecting = useRef(false);
 
   // Re-center canvas to fit all tables in view
   const handleRecenter = useCallback(() => {
@@ -333,6 +380,60 @@ export function Canvas() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Track previous guest count to detect newly added guests
+  const prevGuestCountRef = useRef(event.guests.length);
+
+  // Pan to show newly added guest if they're off-screen
+  useEffect(() => {
+    // Only react when guest count increases and we have exactly one selected guest
+    if (event.guests.length > prevGuestCountRef.current &&
+        canvas.selectedGuestIds.length === 1 &&
+        canvasRef.current) {
+
+      const newGuestId = canvas.selectedGuestIds[0];
+      const newGuest = event.guests.find(g => g.id === newGuestId);
+
+      if (newGuest && newGuest.canvasX !== undefined && newGuest.canvasY !== undefined) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const viewportWidth = rect.width;
+        const viewportHeight = rect.height;
+
+        // Check if guest is visible in current viewport
+        const guestScreenX = newGuest.canvasX * canvas.zoom + canvas.panX;
+        const guestScreenY = newGuest.canvasY * canvas.zoom + canvas.panY;
+
+        const isVisible = guestScreenX >= 0 && guestScreenX <= viewportWidth &&
+                          guestScreenY >= 0 && guestScreenY <= viewportHeight;
+
+        if (!isVisible) {
+          // Pan to show the new guest (slightly left of center to show tables too)
+          panToPosition(newGuest.canvasX + 100, newGuest.canvasY, viewportWidth, viewportHeight);
+        }
+      }
+    }
+    prevGuestCountRef.current = event.guests.length;
+  }, [event.guests.length, canvas.selectedGuestIds, canvas.zoom, canvas.panX, canvas.panY, event.guests, panToPosition]);
+
+  // Clear newly added guest highlight after animation completes (1.5s)
+  useEffect(() => {
+    if (newlyAddedGuestId) {
+      const timer = setTimeout(() => {
+        clearNewlyAddedGuest();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [newlyAddedGuestId, clearNewlyAddedGuest]);
+
+  // Clear newly added table highlight after animation completes (1.5s)
+  useEffect(() => {
+    if (newlyAddedTableId) {
+      const timer = setTimeout(() => {
+        clearNewlyAddedTable();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [newlyAddedTableId, clearNewlyAddedTable]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -377,28 +478,14 @@ export function Canvas() {
 
         return memo;
       },
-      onDrag: ({ delta: [dx, dy], touches, pinching, event, first, memo }) => {
-        // Two-finger drag for panning (when not pinching)
+      onDrag: ({ delta: [dx, dy], touches, pinching, event }) => {
+        // Only handle touch gestures (2+ fingers) for panning
+        // Mouse drag is handled by handleMouseDown/Move/Up for marquee selection
         if (touches >= 2 && !pinching) {
           event?.preventDefault();
           setPan(canvas.panX + dx, canvas.panY + dy);
-          return memo;
         }
-        // Single finger on empty canvas area - also allow pan
-        // Check if we're not over a draggable element
-        if (touches === 1 && first) {
-          const target = event?.target as HTMLElement;
-          const isDraggable = target?.closest?.('[data-draggable]') ||
-                              target?.closest?.('.table-component') ||
-                              target?.closest?.('.guest-chip') ||
-                              target?.closest?.('.canvas-guest');
-          return { allowPan: !isDraggable };
-        }
-        if (touches === 1 && memo?.allowPan) {
-          event?.preventDefault();
-          setPan(canvas.panX + dx, canvas.panY + dy);
-        }
-        return memo;
+        // Single touch/mouse drags are NOT handled here - they go to marquee selection
       },
     },
     {
@@ -431,26 +518,103 @@ export function Canvas() {
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+      // Middle-click or Alt+Shift+click for panning (changed from just Shift to avoid conflict)
+      if (e.button === 1 || (e.button === 0 && e.altKey && e.shiftKey)) {
         setIsPanning(true);
         setPanStart({ x: e.clientX - canvas.panX, y: e.clientY - canvas.panY });
+        return;
+      }
+
+      // Left-click on empty canvas area - start marquee selection
+      // Check if NOT clicking on a table, guest, or other interactive element
+      const target = e.target as HTMLElement;
+      const isOnInteractiveElement = target.closest('.table-component') ||
+        target.closest('.canvas-guest') ||
+        target.closest('.seat-guest') ||
+        target.closest('button') ||
+        target.closest('.context-menu');
+
+      if (e.button === 0 && !isOnInteractiveElement && canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        // Convert to canvas coordinates
+        const canvasX = (e.clientX - rect.left - canvas.panX) / canvas.zoom;
+        const canvasY = (e.clientY - rect.top - canvas.panY) / canvas.zoom;
+
+        setIsMarqueeSelecting(true);
+        setMarqueeStart({ x: canvasX, y: canvasY });
+        setMarqueeEnd({ x: canvasX, y: canvasY });
+        setMarqueeModifier(e.shiftKey ? 'add' : 'replace');
+
+        // Prevent text selection
+        e.preventDefault();
       }
     },
-    [canvas.panX, canvas.panY]
+    [canvas.panX, canvas.panY, canvas.zoom]
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (isPanning) {
         setPan(e.clientX - panStart.x, e.clientY - panStart.y);
+        return;
+      }
+
+      if (isMarqueeSelecting && marqueeStart && canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const canvasX = (e.clientX - rect.left - canvas.panX) / canvas.zoom;
+        const canvasY = (e.clientY - rect.top - canvas.panY) / canvas.zoom;
+        setMarqueeEnd({ x: canvasX, y: canvasY });
       }
     },
-    [isPanning, panStart, setPan]
+    [isPanning, panStart, setPan, isMarqueeSelecting, marqueeStart, canvas.panX, canvas.panY, canvas.zoom]
   );
 
   const handleMouseUp = useCallback(() => {
-    setIsPanning(false);
-  }, []);
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+
+    if (isMarqueeSelecting && marqueeStart && marqueeEnd) {
+      // Find tables that intersect with the selection rectangle
+      const selectedIds = findTablesInSelectionRect(
+        marqueeStart,
+        marqueeEnd,
+        event.tables
+      );
+
+      // Only process if the marquee was actually dragged (not just a click)
+      const marqueeWidth = Math.abs(marqueeEnd.x - marqueeStart.x);
+      const marqueeHeight = Math.abs(marqueeEnd.y - marqueeStart.y);
+      const isActualDrag = marqueeWidth > 5 || marqueeHeight > 5;
+
+      if (isActualDrag) {
+        wasMarqueeSelecting.current = true;
+
+        if (marqueeModifier === 'add') {
+          // Add to existing selection (Shift+drag)
+          const combined = [...new Set([...canvas.selectedTableIds, ...selectedIds])];
+          selectMultipleTables(combined);
+        } else {
+          // Replace selection
+          if (selectedIds.length > 0) {
+            selectMultipleTables(selectedIds);
+          } else {
+            clearTableSelection();
+          }
+        }
+      }
+
+      // Reset marquee state
+      setIsMarqueeSelecting(false);
+      setMarqueeStart(null);
+      setMarqueeEnd(null);
+    }
+  }, [
+    isPanning, isMarqueeSelecting, marqueeStart, marqueeEnd,
+    marqueeModifier, event.tables, canvas.selectedTableIds,
+    selectMultipleTables, clearTableSelection
+  ]);
 
   const handleDragStart = (dragEvent: DragStartEvent) => {
     const { active } = dragEvent;
@@ -610,6 +774,11 @@ export function Canvas() {
   };
 
   const handleCanvasClick = (e: React.MouseEvent) => {
+    // Don't clear selection if we just finished a marquee select
+    if (wasMarqueeSelecting.current) {
+      wasMarqueeSelecting.current = false;
+      return;
+    }
     if (e.target === canvasRef.current) {
       selectTable(null);
     }
@@ -859,7 +1028,7 @@ export function Canvas() {
           onMouseLeave={handleMouseUp}
           onClick={handleCanvasClick}
           onContextMenu={handleCanvasContextMenu}
-          style={{ cursor: isPanning ? 'grabbing' : 'default', touchAction: 'none' }}
+          style={{ cursor: isPanning ? 'grabbing' : isMarqueeSelecting ? 'crosshair' : 'default', touchAction: 'none' }}
         >
           <div
             className="canvas-content"
@@ -877,6 +1046,7 @@ export function Canvas() {
                 isSelected={canvas.selectedTableIds.includes(table.id)}
                 isSnapTarget={nearbyTableId === table.id}
                 swapTargetGuestId={swapTargetGuestId}
+                isNewlyAdded={newlyAddedTableId === table.id}
               />
             ))}
 
@@ -889,6 +1059,7 @@ export function Canvas() {
                   guest={guest}
                   isSelected={canvas.selectedGuestIds.includes(guest.id)}
                   isNearTable={nearbyTableId !== null && draggedGuestId === guest.id}
+                  isNewlyAdded={newlyAddedGuestId === guest.id}
                 />
               ))}
 
@@ -912,6 +1083,19 @@ export function Canvas() {
                 }
               />
             ))}
+
+            {/* Selection Rectangle (Marquee) */}
+            {isMarqueeSelecting && marqueeStart && marqueeEnd && (
+              <div
+                className="selection-rectangle"
+                style={{
+                  left: Math.min(marqueeStart.x, marqueeEnd.x),
+                  top: Math.min(marqueeStart.y, marqueeEnd.y),
+                  width: Math.abs(marqueeEnd.x - marqueeStart.x),
+                  height: Math.abs(marqueeEnd.y - marqueeStart.y),
+                }}
+              />
+            )}
           </div>
 
           {/* Grid overlay */}

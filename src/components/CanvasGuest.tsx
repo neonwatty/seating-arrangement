@@ -9,9 +9,10 @@ interface CanvasGuestProps {
   guest: Guest;
   isSelected: boolean;
   isNearTable?: boolean;
+  isNewlyAdded?: boolean;
 }
 
-export function CanvasGuest({ guest, isSelected, isNearTable }: CanvasGuestProps) {
+export function CanvasGuest({ guest, isSelected, isNearTable, isNewlyAdded }: CanvasGuestProps) {
   const { toggleGuestSelection, addGuestToSelection, selectGuest, openContextMenu, setEditingGuest, visibleGroups } = useStore();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: guest.id,
@@ -63,7 +64,7 @@ export function CanvasGuest({ guest, isSelected, isNearTable }: CanvasGuestProps
   return (
     <div
       ref={setNodeRef}
-      className={`canvas-guest ${isSelected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${isNearTable ? 'near-table' : ''} ${!isGroupVisible ? 'dimmed' : ''}`}
+      className={`canvas-guest ${isSelected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${isNearTable ? 'near-table' : ''} ${!isGroupVisible ? 'dimmed' : ''} ${isNewlyAdded ? 'newly-added' : ''}`}
       style={{
         left: guest.canvasX,
         top: guest.canvasY,

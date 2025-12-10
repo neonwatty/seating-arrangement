@@ -141,7 +141,7 @@
 .add-dropdown .dropdown-menu {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
   margin-top: 0.5rem;
   background: var(--color-bg);
   border: 1px solid var(--color-border);

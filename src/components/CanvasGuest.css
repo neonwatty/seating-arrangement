@@ -146,3 +146,44 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   transform: scale(1.1);
 }
+
+/* Newly added guest highlight animation */
+.canvas-guest.newly-added {
+  animation: newGuestPulse 1.5s ease-out;
+}
+
+.canvas-guest.newly-added .canvas-guest-circle {
+  animation: newGuestGlow 1.5s ease-out;
+}
+
+@keyframes newGuestPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes newGuestGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(249, 112, 102, 0.7), var(--shadow-md);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(249, 112, 102, 0), var(--shadow-lg);
+  }
+  100% {
+    box-shadow: var(--shadow-md);
+  }
+}

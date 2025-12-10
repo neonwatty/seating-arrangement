@@ -12,6 +12,7 @@ interface TableComponentProps {
   isSelected: boolean;
   isSnapTarget?: boolean;
   swapTargetGuestId?: string | null;
+  isNewlyAdded?: boolean;
 }
 
 interface SeatGuestProps {
@@ -123,7 +124,7 @@ function SeatGuest({ guest, seatPosition, tablePosition, isSwapTarget }: SeatGue
   );
 }
 
-export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTargetGuestId }: TableComponentProps) {
+export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTargetGuestId, isNewlyAdded }: TableComponentProps) {
   const { selectTable, removeTable, getViolationsForTable, toggleTableSelection, addTableToSelection, openContextMenu } = useStore();
   const violations = getViolationsForTable(table.id);
   const hasViolations = violations.length > 0;
@@ -269,7 +270,7 @@ export function TableComponent({ table, guests, isSelected, isSnapTarget, swapTa
         setDroppableRef(node);
         setDraggableRef(node);
       }}
-      className={`table-component ${table.shape} ${isSelected ? 'selected' : ''} ${isOver ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${isSnapTarget ? 'snap-target' : ''} capacity-${capacityStatus} ${hasViolations ? 'has-violations' : ''} ${hasRequiredViolations ? 'has-required-violations' : ''}`}
+      className={`table-component ${table.shape} ${isSelected ? 'selected' : ''} ${isOver ? 'drop-target' : ''} ${isDragging ? 'dragging' : ''} ${isSnapTarget ? 'snap-target' : ''} capacity-${capacityStatus} ${hasViolations ? 'has-violations' : ''} ${hasRequiredViolations ? 'has-required-violations' : ''} ${isNewlyAdded ? 'newly-added' : ''}`}
       style={{
         left: table.x,
         top: table.y,

@@ -116,6 +116,12 @@ interface AppState {
   // Animation state for optimization
   animatingGuestIds: Set<string>;
 
+  // Newly added guest for highlight animation
+  newlyAddedGuestId: string | null;
+
+  // Newly added table for highlight animation
+  newlyAddedTableId: string | null;
+
   // Pre-optimization snapshot for reset
   preOptimizationSnapshot: { guestId: string; tableId: string | undefined }[] | null;
 
@@ -139,7 +145,7 @@ interface AppState {
   selectVenueElement: (id: string | null) => void;
 
   // Actions - Guests
-  addGuest: (guest: Omit<Guest, 'id' | 'relationships' | 'rsvpStatus'>) => void;
+  addGuest: (guest: Omit<Guest, 'id' | 'relationships' | 'rsvpStatus'>) => string;
   addQuickGuest: (canvasX: number, canvasY: number) => string;
   updateGuest: (id: string, updates: Partial<Guest>) => void;
   removeGuest: (id: string) => void;
@@ -165,6 +171,7 @@ interface AppState {
   // Actions - Canvas
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
+  panToPosition: (canvasX: number, canvasY: number, viewportWidth: number, viewportHeight: number) => void;
   selectTable: (id: string | null) => void;
   selectGuest: (id: string | null) => void;
 
@@ -238,6 +245,8 @@ interface AppState {
   resetSeating: () => void;
   clearAnimatingGuests: () => void;
   hasOptimizationSnapshot: () => boolean;
+  clearNewlyAddedGuest: () => void;
+  clearNewlyAddedTable: () => void;
 }
 
 const createDefaultEvent = (): Event => {
@@ -546,6 +555,8 @@ export const useStore = create<AppState>()(
       },
       editingGuestId: null,
       animatingGuestIds: new Set(),
+      newlyAddedGuestId: null,
+      newlyAddedTableId: null,
       preOptimizationSnapshot: null,
 
       // Event actions
@@ -563,8 +574,9 @@ export const useStore = create<AppState>()(
       addTable: (shape, x, y) => {
         const defaults = getTableDefaults(shape);
         const tableCount = get().event.tables.length;
+        const newId = uuidv4();
         const newTable: Table = {
-          id: uuidv4(),
+          id: newId,
           name: `Table ${tableCount + 1}`,
           shape,
           x,
@@ -576,6 +588,8 @@ export const useStore = create<AppState>()(
             ...state.event,
             tables: [...state.event.tables, newTable],
           },
+          // Track the newly added table for highlight animation
+          newlyAddedTableId: newId,
         }));
       },
 
@@ -710,12 +724,42 @@ export const useStore = create<AppState>()(
       // Guest actions
       addGuest: (guestData) => {
         // Calculate default canvas position for new unassigned guests
-        const existingUnassigned = get().event.guests.filter((g) => !g.tableId);
-        const defaultX = 80;
-        const defaultY = 100 + existingUnassigned.length * 70;
+        // Place them near the center of existing tables, or at a default position
+        const state = get();
+        const tables = state.event.tables;
+        const existingUnassigned = state.event.guests.filter((g) => !g.tableId && g.canvasX !== undefined);
 
+        let defaultX = 80;
+        let defaultY = 100;
+
+        if (tables.length > 0) {
+          // Calculate bounding box of all tables
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          for (const table of tables) {
+            minX = Math.min(minX, table.x);
+            minY = Math.min(minY, table.y);
+            maxX = Math.max(maxX, table.x + table.width);
+            maxY = Math.max(maxY, table.y + table.height);
+          }
+
+          // Place new guests to the left of the tables area
+          defaultX = minX - 100;
+          defaultY = minY + existingUnassigned.length * 60;
+
+          // If there are many unassigned guests, wrap to new columns
+          const maxGuestsPerColumn = Math.max(1, Math.floor((maxY - minY) / 60));
+          const column = Math.floor(existingUnassigned.length / maxGuestsPerColumn);
+          const row = existingUnassigned.length % maxGuestsPerColumn;
+          defaultX = minX - 100 - column * 80;
+          defaultY = minY + row * 60;
+        } else {
+          // No tables - place guests in a grid starting from a reasonable position
+          defaultY = 100 + existingUnassigned.length * 70;
+        }
+
+        const newId = uuidv4();
         const newGuest: Guest = {
-          id: uuidv4(),
+          id: newId,
           relationships: [],
           rsvpStatus: 'pending',
           canvasX: defaultX,
@@ -727,7 +771,17 @@ export const useStore = create<AppState>()(
             ...state.event,
             guests: [...state.event.guests, newGuest],
           },
+          // Select the new guest so they're highlighted
+          canvas: {
+            ...state.canvas,
+            selectedGuestIds: [newId],
+            selectedTableIds: [],
+            selectedVenueElementId: null,
+          },
+          // Track the newly added guest for highlight animation
+          newlyAddedGuestId: newId,
         }));
+        return newId;
       },
 
       addQuickGuest: (canvasX, canvasY) => {
@@ -752,6 +806,8 @@ export const useStore = create<AppState>()(
             selectedTableIds: [],
             selectedVenueElementId: null,
           },
+          // Track the newly added guest for highlight animation
+          newlyAddedGuestId: newId,
         }));
         return newId;
       },
@@ -965,6 +1021,17 @@ export const useStore = create<AppState>()(
         set((state) => ({
           canvas: { ...state.canvas, panX, panY },
         })),
+
+      panToPosition: (canvasX, canvasY, viewportWidth, viewportHeight) =>
+        set((state) => {
+          // Calculate pan values to center the position in the viewport
+          const { zoom } = state.canvas;
+          const panX = viewportWidth / 2 - canvasX * zoom;
+          const panY = viewportHeight / 2 - canvasY * zoom;
+          return {
+            canvas: { ...state.canvas, panX, panY },
+          };
+        }),
 
       selectTable: (id) =>
         set((state) => ({
@@ -1700,6 +1767,10 @@ export const useStore = create<AppState>()(
       clearAnimatingGuests: () => set({ animatingGuestIds: new Set() }),
 
       hasOptimizationSnapshot: () => get().preOptimizationSnapshot !== null,
+
+      clearNewlyAddedGuest: () => set({ newlyAddedGuestId: null }),
+
+      clearNewlyAddedTable: () => set({ newlyAddedTableId: null }),
     }),
     {
       name: 'seating-arrangement-storage',
