@@ -1,11 +1,56 @@
 [
   {
     "version": "0.1.0",
-    "date": "December 2024",
+    "date": "December 9, 2025",
     "highlights": [
       "New tables and guests now animate when added, making them easy to spot",
       "Newly added guests are automatically selected and centered on screen",
-      "Improved dropdown menu positioning for better usability"
+      "Added re-center button to quickly return to your table layout"
+    ]
+  },
+  {
+    "version": "0.0.5",
+    "date": "December 9, 2025",
+    "highlights": [
+      "Full mobile and touch support - plan your seating on any device",
+      "Mobile-optimized table management panel for easy editing on the go",
+      "Improved touch gestures for panning and zooming the canvas"
+    ]
+  },
+  {
+    "version": "0.0.4",
+    "date": "December 8, 2025",
+    "highlights": [
+      "Added group legend showing relationship types at a glance",
+      "Visual markers for dietary restrictions and accessibility needs",
+      "New grid controls with snap-to-grid for precise table placement"
+    ]
+  },
+  {
+    "version": "0.0.3",
+    "date": "December 6, 2025",
+    "highlights": [
+      "Improved dropdown menu positioning for better usability",
+      "Enhanced default zoom level to better showcase your tables",
+      "App renamed to TableCraft with new branding"
+    ]
+  },
+  {
+    "version": "0.0.2",
+    "date": "December 1, 2025",
+    "highlights": [
+      "Added guest editing - update names and details anytime",
+      "Toast notifications for clear feedback on actions",
+      "Automated testing to ensure reliability"
+    ]
+  },
+  {
+    "version": "0.0.1",
+    "date": "November 29, 2025",
+    "highlights": [
+      "Initial release of TableCraft",
+      "Drag-and-drop guest seating",
+      "Multiple table shapes and sizes"
     ]
   }
 ]
