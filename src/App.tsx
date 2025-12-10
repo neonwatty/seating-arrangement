@@ -26,6 +26,7 @@ function App() {
     pushHistory,
     editingGuestId,
     setEditingGuest,
+    recenterCanvas,
   } = useStore();
   const [showLanding, setShowLanding] = useState(true);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
@@ -113,6 +114,13 @@ function App() {
         return;
       }
 
+      // Re-center canvas (0 or c)
+      if (e.key === '0' || e.key === 'c') {
+        e.preventDefault();
+        recenterCanvas(window.innerWidth - 300, window.innerHeight - 150); // Approximate canvas size
+        return;
+      }
+
       // Escape to close modals
       if (e.key === 'Escape') {
         setShowShortcutsHelp(false);
@@ -121,7 +129,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo, canUndo, canRedo, canvas.selectedTableIds, canvas.selectedGuestIds, batchRemoveTables, batchRemoveGuests, nudgeSelectedTables, pushHistory]);
+  }, [undo, redo, canUndo, canRedo, canvas.selectedTableIds, canvas.selectedGuestIds, batchRemoveTables, batchRemoveGuests, nudgeSelectedTables, pushHistory, recenterCanvas]);
 
   // Show landing page
   if (showLanding) {
@@ -212,6 +220,10 @@ function App() {
                 <div className="shortcut-row">
                   <span className="shortcut-key">Shift+Arrow</span>
                   <span className="shortcut-desc">Fine nudge 1px</span>
+                </div>
+                <div className="shortcut-row">
+                  <span className="shortcut-key">0 / C</span>
+                  <span className="shortcut-desc">Re-center view</span>
                 </div>
               </div>
             </div>

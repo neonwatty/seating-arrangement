@@ -172,6 +172,7 @@ interface AppState {
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
   panToPosition: (canvasX: number, canvasY: number, viewportWidth: number, viewportHeight: number) => void;
+  recenterCanvas: (viewportWidth?: number, viewportHeight?: number) => void;
   selectTable: (id: string | null) => void;
   selectGuest: (id: string | null) => void;
 
@@ -1030,6 +1031,50 @@ export const useStore = create<AppState>()(
           const panY = viewportHeight / 2 - canvasY * zoom;
           return {
             canvas: { ...state.canvas, panX, panY },
+          };
+        }),
+
+      recenterCanvas: (viewportWidth = 800, viewportHeight = 600) =>
+        set((state) => {
+          const tables = state.event.tables;
+          if (tables.length === 0) {
+            // No tables, reset to default view
+            return {
+              canvas: { ...state.canvas, panX: 50, panY: 20, zoom: 1 },
+            };
+          }
+
+          // Calculate bounding box of all tables
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          for (const table of tables) {
+            minX = Math.min(minX, table.x);
+            minY = Math.min(minY, table.y);
+            maxX = Math.max(maxX, table.x + table.width);
+            maxY = Math.max(maxY, table.y + table.height);
+          }
+
+          // Add padding
+          const padding = 100;
+          minX -= padding;
+          minY -= padding;
+          maxX += padding;
+          maxY += padding;
+
+          // Calculate zoom to fit
+          const contentWidth = maxX - minX;
+          const contentHeight = maxY - minY;
+          const zoomX = viewportWidth / contentWidth;
+          const zoomY = viewportHeight / contentHeight;
+          const newZoom = Math.min(Math.max(Math.min(zoomX, zoomY), 0.25), 2);
+
+          // Calculate pan to center content
+          const centerX = (minX + maxX) / 2;
+          const centerY = (minY + maxY) / 2;
+          const newPanX = (viewportWidth / 2) - (centerX * newZoom);
+          const newPanY = (viewportHeight / 2) - (centerY * newZoom);
+
+          return {
+            canvas: { ...state.canvas, panX: newPanX, panY: newPanY, zoom: newZoom },
           };
         }),
 
