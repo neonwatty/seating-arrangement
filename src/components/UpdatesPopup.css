@@ -141,26 +141,15 @@
   margin-bottom: 0;
 }
 
-.update-version-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
 .update-version {
   display: inline-block;
   padding: 0.25rem 0.625rem;
+  margin-bottom: 0.5rem;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   color: white;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   border-radius: var(--radius-full);
-}
-
-.update-date {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
 }
 
 .update-list {

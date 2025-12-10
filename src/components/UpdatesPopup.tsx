@@ -25,10 +25,7 @@ export function UpdatesPopup({ isOpen, onClose }: UpdatesPopupProps) {
         <div className="updates-content">
           {updates.map((update) => (
             <div key={update.version} className="update-section">
-              <div className="update-version-header">
-                <span className="update-version">v{update.version}</span>
-                <span className="update-date">{update.date}</span>
-              </div>
+              <span className="update-version">v{update.version}</span>
               <ul className="update-list">
                 {update.highlights.map((highlight, index) => (
                   <li key={index}>{highlight}</li>
