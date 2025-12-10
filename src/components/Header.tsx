@@ -1,4 +1,5 @@
 import { useStore } from '../store/useStore';
+import { version } from '../../package.json';
 import './Header.css';
 
 interface HeaderProps {
@@ -17,6 +18,7 @@ export function Header({ onLogoClick }: HeaderProps) {
           style={{ cursor: onLogoClick ? 'pointer' : 'default' }}
           title="Back to home"
         >TableCraft</h1>
+        <span className="version-badge">v{version}</span>
         <div className="event-info">
           <input
             type="text"

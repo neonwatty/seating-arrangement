@@ -1,4 +1,5 @@
 import './LandingPage.css';
+import { version } from '../../package.json';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -114,6 +115,7 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
         {/* Footer */}
         <footer className="landing-footer">
           <p>Made for event planners</p>
+          <p className="version-tag">v{version}</p>
         </footer>
       </div>
     </div>
