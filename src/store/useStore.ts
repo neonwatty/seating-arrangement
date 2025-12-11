@@ -226,6 +226,7 @@ interface AppState {
   toggleSnapToGrid: () => void;
   setGridSize: (size: CanvasPreferences['gridSize']) => void;
   toggleAlignmentGuides: () => void;
+  togglePanMode: () => void;
   setAlignmentGuides: (guides: AlignmentGuide[]) => void;
   clearAlignmentGuides: () => void;
 
@@ -550,6 +551,7 @@ export const useStore = create<AppState>()(
         snapToGrid: true,
         gridSize: 40,
         showAlignmentGuides: true,
+        panMode: false,
       },
       history: [],
       historyIndex: -1,
@@ -1527,6 +1529,11 @@ export const useStore = create<AppState>()(
       toggleAlignmentGuides: () =>
         set((state) => ({
           canvasPrefs: { ...state.canvasPrefs, showAlignmentGuides: !state.canvasPrefs.showAlignmentGuides },
+        })),
+
+      togglePanMode: () =>
+        set((state) => ({
+          canvasPrefs: { ...state.canvasPrefs, panMode: !state.canvasPrefs.panMode },
         })),
 
       setAlignmentGuides: (guides) => set({ alignmentGuides: guides }),

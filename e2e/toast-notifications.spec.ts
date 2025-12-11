@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 // Helper to enter app from landing page
 async function enterApp(page: import('@playwright/test').Page) {
   await page.goto('/');
-  await page.click('button:has-text("Try the Demo")');
+  await page.click('button:has-text("Launch App")');
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
 }
 
@@ -15,7 +15,7 @@ test.describe.skip('Toast Notifications', () => {
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     // Re-enter app after reload
-    await page.click('button:has-text("Try the Demo")');
+    await page.click('button:has-text("Launch App")');
     await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
 
     // Add a table using toolbar dropdown

@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 // Helper to enter the app from landing page
 async function enterApp(page: import('@playwright/test').Page) {
   await page.goto('/');
-  // Click "Try the Demo" button on landing page
-  await page.click('button:has-text("Try the Demo")');
+  // Click "Launch App" button on landing page
+  await page.click('button:has-text("Launch App")');
   // Wait for app to load
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
 }
@@ -20,7 +20,7 @@ test.describe('TableCraft App Demo', () => {
     await expect(page.locator('.landing-logo')).toContainText('TableCraft');
 
     // Check CTA button exists
-    await expect(page.locator('button:has-text("Try the Demo")')).toBeVisible();
+    await expect(page.locator('button:has-text("Launch App")')).toBeVisible();
   });
 
   test('demo data loads with tables and guests', async ({ page }) => {
@@ -167,7 +167,7 @@ test.describe('Optimization Feature', () => {
     await page.reload();
 
     // Re-enter the app after reload
-    await page.click('button:has-text("Try the Demo")');
+    await page.click('button:has-text("Launch App")');
     await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
 
     await page.waitForTimeout(1000);

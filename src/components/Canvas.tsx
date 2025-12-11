@@ -478,14 +478,28 @@ export function Canvas() {
 
         return memo;
       },
-      onDrag: ({ delta: [dx, dy], touches, pinching, event }) => {
-        // Only handle touch gestures (2+ fingers) for panning
-        // Mouse drag is handled by handleMouseDown/Move/Up for marquee selection
+      onDrag: ({ delta: [dx, dy], touches, pinching, event, target }) => {
+        // Two-finger panning always works
         if (touches >= 2 && !pinching) {
           event?.preventDefault();
           setPan(canvas.panX + dx, canvas.panY + dy);
+          return;
         }
-        // Single touch/mouse drags are NOT handled here - they go to marquee selection
+
+        // Single-finger panning when pan mode is enabled (mobile feature)
+        // Only pan if touching empty canvas area, not interactive elements
+        if (touches === 1 && canvasPrefs.panMode && !pinching) {
+          const targetEl = target as HTMLElement;
+          const isOnInteractiveElement = targetEl?.closest?.('.table-component') ||
+            targetEl?.closest?.('.canvas-guest') ||
+            targetEl?.closest?.('.seat-guest') ||
+            targetEl?.closest?.('button');
+
+          if (!isOnInteractiveElement) {
+            event?.preventDefault();
+            setPan(canvas.panX + dx, canvas.panY + dy);
+          }
+        }
       },
     },
     {
