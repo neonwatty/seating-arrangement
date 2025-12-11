@@ -13,12 +13,27 @@ interface OnboardingWizardProps {
 export function OnboardingWizard({ isOpen, onClose, onComplete }: OnboardingWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { activeView, setActiveView, sidebarOpen, toggleSidebar } = useStore();
 
-  const currentStep = ONBOARDING_STEPS[currentStepIndex];
-  const isLastStep = currentStepIndex === ONBOARDING_STEPS.length - 1;
+  // Filter steps for mobile - skip sidebar step since it's an overlay on mobile
+  const steps = isMobile
+    ? ONBOARDING_STEPS.filter(step => step.id !== 'sidebar')
+    : ONBOARDING_STEPS;
+
+  const currentStep = steps[currentStepIndex];
+  const isLastStep = currentStepIndex === steps.length - 1;
   const isFirstStep = currentStepIndex === 0;
+
+  // Track viewport size for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 480);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Update target element rect
   const updateTargetRect = useCallback(() => {
@@ -115,8 +130,8 @@ export function OnboardingWizard({ isOpen, onClose, onComplete }: OnboardingWiza
 
     const padding = currentStep.highlightPadding ?? 8;
     const tooltipGap = 16;
-    const tooltipWidth = 320;
-    const tooltipHeight = 180; // Approximate
+    const tooltipWidth = 360;
+    const tooltipHeight = 200; // Approximate
 
     let left = 0;
     let top = 0;
@@ -226,7 +241,7 @@ export function OnboardingWizard({ isOpen, onClose, onComplete }: OnboardingWiza
 
         <div className="onboarding-tooltip-footer">
           <div className="onboarding-progress">
-            {ONBOARDING_STEPS.map((_, index) => (
+            {steps.map((_, index) => (
               <span
                 key={index}
                 className={`onboarding-dot ${index === currentStepIndex ? 'active' : ''} ${
