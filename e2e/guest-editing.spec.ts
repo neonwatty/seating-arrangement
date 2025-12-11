@@ -2,6 +2,15 @@ import { test, expect } from '@playwright/test';
 
 // Helper to enter app from landing page
 async function enterApp(page: import('@playwright/test').Page) {
+  // First set localStorage before the app hydrates
+  await page.addInitScript(() => {
+    const stored = localStorage.getItem('seating-arrangement-storage');
+    const data = stored ? JSON.parse(stored) : { state: {}, version: 9 };
+    data.state = data.state || {};
+    data.state.hasCompletedOnboarding = true;
+    data.version = 9;
+    localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+  });
   await page.goto('/');
   await page.click('button:has-text("Launch App")');
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
@@ -10,8 +19,13 @@ async function enterApp(page: import('@playwright/test').Page) {
 test.describe('Guest Editing', () => {
   test.beforeEach(async ({ page }) => {
     await enterApp(page);
-    // Clear any persisted state and set up fresh
-    await page.evaluate(() => localStorage.clear());
+    // Clear any persisted state and set up fresh, but preserve onboarding completion
+    await page.evaluate(() => {
+      localStorage.clear();
+      // Re-set onboarding completion to skip wizard (zustand-persist v4 format)
+      const data = { state: { hasCompletedOnboarding: true }, version: 9 };
+      localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+    });
     await page.reload();
     // Re-enter app after reload
     await page.click('button:has-text("Launch App")');

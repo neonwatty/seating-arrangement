@@ -2,6 +2,15 @@ import { test, expect } from '@playwright/test';
 
 // Helper to enter the app from landing page
 async function enterApp(page: import('@playwright/test').Page) {
+  // First set localStorage before the app hydrates
+  await page.addInitScript(() => {
+    const stored = localStorage.getItem('seating-arrangement-storage');
+    const data = stored ? JSON.parse(stored) : { state: {}, version: 9 };
+    data.state = data.state || {};
+    data.state.hasCompletedOnboarding = true;
+    data.version = 9;
+    localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+  });
   await page.goto('/');
   // Click "Launch App" button on landing page
   await page.click('button:has-text("Launch App")');
@@ -162,8 +171,13 @@ test.describe('Optimization Feature', () => {
   test('clicking optimize changes button to reset', async ({ page }) => {
     await enterApp(page);
 
-    // Clear localStorage to ensure fresh state
-    await page.evaluate(() => localStorage.clear());
+    // Clear localStorage to ensure fresh state, but preserve onboarding completion
+    await page.evaluate(() => {
+      localStorage.clear();
+      // Re-set onboarding completion to skip wizard (zustand-persist v4 format)
+      const data = { state: { hasCompletedOnboarding: true }, version: 9 };
+      localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+    });
     await page.reload();
 
     // Re-enter the app after reload

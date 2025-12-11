@@ -7,9 +7,10 @@ import './Header.css';
 interface HeaderProps {
   onLogoClick?: () => void;
   onShowHelp?: () => void;
+  onStartTour?: () => void;
 }
 
-export function Header({ onLogoClick, onShowHelp }: HeaderProps) {
+export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
   const { event, setEventName, theme, cycleTheme } = useStore();
 
   // Apply theme to document
@@ -52,6 +53,18 @@ export function Header({ onLogoClick, onShowHelp }: HeaderProps) {
         >TableCraft</h1>
         <span className="version-badge">v{version}</span>
         <UpdatesButton variant="header" />
+        {onStartTour && (
+          <button
+            className="tour-btn"
+            onClick={onStartTour}
+            title="Take a tour of TableCraft"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </button>
+        )}
         {onShowHelp && (
           <button
             className="help-btn"

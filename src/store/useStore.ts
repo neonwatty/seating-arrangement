@@ -84,7 +84,14 @@ const MAX_HISTORY_SIZE = 50;
 // Theme type
 type Theme = 'light' | 'dark' | 'system';
 
-interface AppState {
+// Onboarding state
+interface OnboardingState {
+  hasCompletedOnboarding: boolean;
+  setOnboardingComplete: () => void;
+  resetOnboarding: () => void;
+}
+
+interface AppState extends OnboardingState {
   // Current event
   event: Event;
   canvas: CanvasState;
@@ -572,6 +579,11 @@ export const useStore = create<AppState>()(
       newlyAddedGuestId: null,
       newlyAddedTableId: null,
       preOptimizationSnapshot: null,
+      hasCompletedOnboarding: false,
+
+      // Onboarding actions
+      setOnboardingComplete: () => set({ hasCompletedOnboarding: true }),
+      resetOnboarding: () => set({ hasCompletedOnboarding: false }),
 
       // Event actions
       setEventName: (name) =>
@@ -1847,8 +1859,12 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'seating-arrangement-storage',
-      version: 8, // Increment to apply new zoom/pan defaults
-      partialize: (state) => ({ event: state.event, theme: state.theme }),
+      version: 9, // Increment to add hasCompletedOnboarding
+      partialize: (state) => ({
+        event: state.event,
+        theme: state.theme,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
+      }),
       migrate: () => {
         // Return fresh default state when version changes
         return { event: createDefaultEvent() };

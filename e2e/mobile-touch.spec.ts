@@ -2,6 +2,15 @@ import { test, expect } from '@playwright/test';
 
 // Helper to enter the app from landing page
 async function enterApp(page: import('@playwright/test').Page) {
+  // First set localStorage before the app hydrates
+  await page.addInitScript(() => {
+    const stored = localStorage.getItem('seating-arrangement-storage');
+    const data = stored ? JSON.parse(stored) : { state: {}, version: 9 };
+    data.state = data.state || {};
+    data.state.hasCompletedOnboarding = true;
+    data.version = 9;
+    localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+  });
   await page.goto('/');
   await page.click('button:has-text("Launch App")');
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });

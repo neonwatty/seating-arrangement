@@ -9,6 +9,7 @@ import { GuestForm } from './components/GuestForm';
 import { ToastContainer } from './components/Toast';
 import { showToast } from './components/toastStore';
 import { LandingPage } from './components/LandingPage';
+import { OnboardingWizard } from './components/OnboardingWizard';
 import { useStore } from './store/useStore';
 import './App.css';
 
@@ -27,10 +28,22 @@ function App() {
     editingGuestId,
     setEditingGuest,
     recenterCanvas,
+    hasCompletedOnboarding,
+    setOnboardingComplete,
   } = useStore();
   const [showLanding, setShowLanding] = useState(true);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Auto-show onboarding for first-time users after landing page
+  useEffect(() => {
+    if (!showLanding && !hasCompletedOnboarding) {
+      // Small delay to let the app render first
+      const timer = setTimeout(() => setShowOnboarding(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showLanding, hasCompletedOnboarding]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -143,7 +156,11 @@ function App() {
 
   return (
     <div className="app">
-      <Header onLogoClick={() => setShowLanding(true)} onShowHelp={() => setShowShortcutsHelp(true)} />
+      <Header
+        onLogoClick={() => setShowLanding(true)}
+        onShowHelp={() => setShowShortcutsHelp(true)}
+        onStartTour={() => setShowOnboarding(true)}
+      />
       <div className="main-content view-visible">
         {activeView === 'dashboard' && <DashboardView />}
         {activeView === 'canvas' && (
@@ -233,6 +250,22 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Onboarding Wizard */}
+      <OnboardingWizard
+        isOpen={showOnboarding}
+        onClose={() => {
+          setShowOnboarding(false);
+          // Mark as complete even on skip/close to not annoy users
+          if (!hasCompletedOnboarding) {
+            setOnboardingComplete();
+          }
+        }}
+        onComplete={() => {
+          setOnboardingComplete();
+          showToast('Tour complete! Press ? anytime for help.', 'success');
+        }}
+      />
 
       <ToastContainer />
     </div>

@@ -2,6 +2,15 @@ import { test, expect } from '@playwright/test';
 
 // Helper to enter app from landing page
 async function enterApp(page: import('@playwright/test').Page) {
+  // First set localStorage before the app hydrates
+  await page.addInitScript(() => {
+    const stored = localStorage.getItem('seating-arrangement-storage');
+    const data = stored ? JSON.parse(stored) : { state: {}, version: 9 };
+    data.state = data.state || {};
+    data.state.hasCompletedOnboarding = true;
+    data.version = 9;
+    localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+  });
   await page.goto('/');
   await page.click('button:has-text("Launch App")');
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
@@ -9,10 +18,24 @@ async function enterApp(page: import('@playwright/test').Page) {
 
 test.describe('Theme toggle functionality', () => {
   test.beforeEach(async ({ page }) => {
-    // Clear localStorage to start fresh
+    // Set hasCompletedOnboarding but preserve any other data that may exist
+    await page.addInitScript(() => {
+      const stored = localStorage.getItem('seating-arrangement-storage');
+      const data = stored ? JSON.parse(stored) : { state: {}, version: 9 };
+      data.state = data.state || {};
+      data.state.hasCompletedOnboarding = true;
+      data.version = 9;
+      localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+    });
+    // Clear only on first navigation to ensure fresh state per test
     await page.goto('/');
-    await page.evaluate(() => localStorage.clear());
-    await enterApp(page);
+    await page.evaluate(() => {
+      // Clear localStorage but keep onboarding completion
+      const data = { state: { hasCompletedOnboarding: true }, version: 9 };
+      localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+    });
+    await page.click('button:has-text("Launch App")');
+    await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
   });
 
   test('theme toggle button is visible in header', async ({ page }) => {
