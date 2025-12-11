@@ -14,6 +14,36 @@
   cursor: grabbing;
 }
 
+/* Long-press visual feedback for touch devices */
+@media (pointer: coarse) {
+  .canvas-guest::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .canvas-guest:active::after {
+    animation: longPressRingCanvas 0.2s ease-out forwards;
+  }
+
+  @keyframes longPressRingCanvas {
+    0% {
+      border-color: transparent;
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    100% {
+      border-color: var(--color-primary);
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}
+
 .canvas-guest.dragging {
   z-index: 1000;
   opacity: 0.8;

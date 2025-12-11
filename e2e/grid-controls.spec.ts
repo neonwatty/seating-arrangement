@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 // Helper to enter the app from landing page
 async function enterApp(page: import('@playwright/test').Page) {
   await page.goto('/');
-  await page.click('button:has-text("Try the Demo")');
+  await page.click('button:has-text("Launch App")');
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
   // Wait for grid controls to be visible
   await expect(page.locator('.grid-controls')).toBeVisible({ timeout: 5000 });
@@ -263,7 +263,7 @@ test.describe('Grid Controls', () => {
 
       // Reload page
       await page.reload();
-      await page.click('button:has-text("Try the Demo")');
+      await page.click('button:has-text("Launch App")');
       await expect(page.locator('.grid-controls')).toBeVisible({ timeout: 5000 });
 
       // All controls should be back to defaults

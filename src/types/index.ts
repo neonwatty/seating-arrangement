@@ -130,6 +130,7 @@ export interface CanvasPreferences {
   snapToGrid: boolean;
   gridSize: 20 | 40 | 80;
   showAlignmentGuides: boolean;
+  panMode: boolean; // When true, single-finger touch pans instead of selecting
 }
 
 export interface AlignmentGuide {
