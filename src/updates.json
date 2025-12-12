@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.3.0",
+    "highlights": [
+      "New guided tour helps you get started - click 'Tour' in the header anytime",
+      "Much better mobile experience - larger touch targets and easier navigation",
+      "Animated stats and beautiful empty states make the app feel more polished",
+      "Press '?' to see all keyboard shortcuts, or '0' to re-center your view"
+    ]
+  },
+  {
     "version": "0.2.0",
     "highlights": [
       "Dark mode toggle - switch between light, dark, and system themes",
