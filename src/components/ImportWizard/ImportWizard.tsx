@@ -81,12 +81,13 @@ export function ImportWizard({ isOpen, onClose }: ImportWizardProps) {
         return state.parsedFile !== null && state.fileError === null;
       case 'mapping':
         return hasRequiredMappings(state.columnMappings);
-      case 'preview':
+      case 'preview': {
         // Can proceed if we have any guests to import (excluding validation errors that are critical)
         const includedGuests = state.parsedGuests.filter(
           (_, i) => !state.excludedRowIndices.has(i)
         );
         return includedGuests.length > 0;
+      }
       case 'duplicates':
         // Can always proceed from duplicates (resolutions have defaults)
         return true;

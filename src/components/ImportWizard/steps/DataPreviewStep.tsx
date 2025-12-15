@@ -15,7 +15,7 @@ export function DataPreviewStep({ state, dispatch }: DataPreviewStepProps) {
 
   // Get errors by row index
   const errorsByRow = useMemo(() => {
-    const map = new Map<number, typeof state.validationErrors>();
+    const map = new Map<number, ImportWizardState['validationErrors']>();
     state.validationErrors.forEach((error) => {
       const existing = map.get(error.rowIndex) || [];
       map.set(error.rowIndex, [...existing, error]);
