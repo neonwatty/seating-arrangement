@@ -17,6 +17,11 @@ async function enterAppMobile(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.click('button:has-text("Start Planning")');
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+  // Dispatch resize event to ensure React hooks detect the correct viewport
+  // This is needed because in CI the browser may initialize with a different viewport
+  await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+  // Small wait for React to re-render with the correct breakpoint
+  await page.waitForTimeout(100);
 }
 
 // Helper to enter app on desktop
@@ -33,6 +38,9 @@ async function enterAppDesktop(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.click('button:has-text("Start Planning")');
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+  // Dispatch resize event to ensure React hooks detect the correct viewport
+  await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+  await page.waitForTimeout(100);
 }
 
 test.describe('Mobile Toolbar Menu - Visibility', () => {
