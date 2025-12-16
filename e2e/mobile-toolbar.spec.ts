@@ -5,6 +5,7 @@ const MOBILE_VIEWPORT = { width: 393, height: 852 };
 
 // Skip these tests on chromium project in CI since viewport changes don't work reliably
 // in headless CI environment with Desktop Chrome viewport settings
+// eslint-disable-next-line no-empty-pattern
 test.beforeEach(async ({}, testInfo) => {
   if (testInfo.project.name === 'chromium' && process.env.CI) {
     test.skip(true, 'Mobile toolbar tests require mobile viewport - skipped on chromium in CI');
