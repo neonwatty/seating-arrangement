@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.1",
+    "highlights": [
+      "Improved mobile responsiveness - the app now detects your device size more reliably",
+      "Better mobile experience on all browsers and devices"
+    ]
+  },
+  {
     "version": "0.4.0",
     "highlights": [
       "Import guests from CSV or Excel files - no more manual entry!",

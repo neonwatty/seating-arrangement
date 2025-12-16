@@ -5,6 +5,13 @@ All notable changes to TableCraft will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-12-16
+
+### Fixed
+- Mobile viewport detection now uses CSS media queries (matchMedia) for reliable breakpoint detection in headless browsers
+- Mobile E2E tests now run reliably in CI with proper device emulation
+- Re-added e2e-mobile CI job that runs mobile-specific tests with Mobile Chrome project
+
 ## [0.4.0] - 2025-12-15
 
 ### Added
