@@ -5,6 +5,19 @@ All notable changes to TableCraft will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-12-16
+
+### Added
+- Table Assignment step in import wizard - optionally create tables and assign guests during import
+- Table shape selection (round, rectangle, square, oval, half-round, serpentine)
+- Adjustable table capacity with smart shape-based defaults
+- Auto-calculated table count based on guest count and capacity
+- Four distribution strategies: Distribute Evenly, Keep Groups Together, Smart Optimization, Don't Assign
+- Live preview of table assignments before importing
+- Batch table creation via new `addTables` store function
+- Marquee selection for selecting multiple tables/guests on canvas
+- 32 new E2E tests for Table Assignment feature
+
 ## [0.4.1] - 2025-12-16
 
 ### Fixed
