@@ -16,12 +16,32 @@ const eventTypeBadges: Record<Event['eventType'], { label: string; className: st
   other: { label: 'Other', className: 'badge-other' },
 };
 
+// SVG icons for view toggle
+const GridIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    <rect x="1" y="1" width="6" height="6" rx="1" />
+    <rect x="9" y="1" width="6" height="6" rx="1" />
+    <rect x="1" y="9" width="6" height="6" rx="1" />
+    <rect x="9" y="9" width="6" height="6" rx="1" />
+  </svg>
+);
+
+const ListIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    <rect x="1" y="2" width="14" height="2" rx="0.5" />
+    <rect x="1" y="7" width="14" height="2" rx="0.5" />
+    <rect x="1" y="12" width="14" height="2" rx="0.5" />
+  </svg>
+);
+
 export function EventListView() {
   const {
     events,
     switchEvent,
     setActiveView,
     canCreateEvent,
+    eventListViewMode,
+    setEventListViewMode,
   } = useStore();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -71,15 +91,37 @@ export function EventListView() {
           <h1>Your Events</h1>
           <p className="header-subtitle">Select an event to continue planning or create a new one.</p>
         </div>
-        <button
-          className="create-event-btn"
-          onClick={() => setShowCreateModal(true)}
-          disabled={!canCreateEvent()}
-          title={!canCreateEvent() ? `Maximum of ${MAX_EVENTS} events reached` : undefined}
-        >
-          <span className="btn-icon">+</span>
-          Create Event
-        </button>
+        <div className="header-actions">
+          <div className="view-toggle" role="group" aria-label="View mode">
+            <button
+              className={`view-toggle-btn ${eventListViewMode === 'cards' ? 'active' : ''}`}
+              onClick={() => setEventListViewMode('cards')}
+              aria-pressed={eventListViewMode === 'cards'}
+              title="Card view"
+            >
+              <GridIcon />
+              <span className="view-toggle-label">Cards</span>
+            </button>
+            <button
+              className={`view-toggle-btn ${eventListViewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setEventListViewMode('list')}
+              aria-pressed={eventListViewMode === 'list'}
+              title="List view"
+            >
+              <ListIcon />
+              <span className="view-toggle-label">List</span>
+            </button>
+          </div>
+          <button
+            className="create-event-btn"
+            onClick={() => setShowCreateModal(true)}
+            disabled={!canCreateEvent()}
+            title={!canCreateEvent() ? `Maximum of ${MAX_EVENTS} events reached` : undefined}
+          >
+            <span className="btn-icon">+</span>
+            Create Event
+          </button>
+        </div>
       </div>
 
       {!canCreateEvent() && (
@@ -100,79 +142,149 @@ export function EventListView() {
         </div>
       ) : (
         <>
-          <div className="event-cards-grid">
-            {sortedEvents.map((event) => {
-              const guestCount = event.guests.length;
-              const tableCount = event.tables.length;
-              const badge = eventTypeBadges[event.eventType] || eventTypeBadges.other;
+          {eventListViewMode === 'cards' ? (
+            <div className="event-cards-grid">
+              {sortedEvents.map((event) => {
+                const guestCount = event.guests.length;
+                const tableCount = event.tables.length;
+                const badge = eventTypeBadges[event.eventType] || eventTypeBadges.other;
 
-              return (
-                <div
-                  key={event.id}
-                  className="event-card"
-                  onClick={() => handleEventClick(event.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      handleEventClick(event.id);
-                    }
-                  }}
-                >
-                  <div className="event-card-header">
-                    <h3 className="event-name">{event.name}</h3>
-                    <span className={`event-type-badge ${badge.className}`}>
-                      {badge.label}
-                    </span>
+                return (
+                  <div
+                    key={event.id}
+                    className="event-card"
+                    onClick={() => handleEventClick(event.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleEventClick(event.id);
+                      }
+                    }}
+                  >
+                    <div className="event-card-header">
+                      <h3 className="event-name">{event.name}</h3>
+                      <span className={`event-type-badge ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    {event.date && (
+                      <div className="event-date">
+                        <span className="date-icon">📅</span>
+                        {formatDate(event.date)}
+                      </div>
+                    )}
+
+                    {event.venueName && (
+                      <div className="event-venue">
+                        <span className="venue-icon">📍</span>
+                        {event.venueName}
+                      </div>
+                    )}
+
+                    <div className="event-card-stats">
+                      <div className="stat">
+                        <span className="stat-icon">👥</span>
+                        <span className="stat-value">{guestCount}</span>
+                        <span className="stat-label">guest{guestCount !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="stat">
+                        <span className="stat-icon">🪑</span>
+                        <span className="stat-value">{tableCount}</span>
+                        <span className="stat-label">table{tableCount !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+
+                    <div className="event-card-actions">
+                      <button
+                        className="card-action-btn edit"
+                        onClick={(e) => handleEditClick(e, event)}
+                        title="Edit event details"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="card-action-btn delete"
+                        onClick={(e) => handleDeleteClick(e, event)}
+                        title="Delete event"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="event-list-table" role="list" aria-label="Events list">
+              <div className="event-list-header-row">
+                <div className="col-name">Name</div>
+                <div className="col-type">Type</div>
+                <div className="col-date">Date</div>
+                <div className="col-guests">Guests</div>
+                <div className="col-tables">Tables</div>
+                <div className="col-actions">Actions</div>
+              </div>
+              {sortedEvents.map((event) => {
+                const guestCount = event.guests.length;
+                const tableCount = event.tables.length;
+                const badge = eventTypeBadges[event.eventType] || eventTypeBadges.other;
 
-                  {event.date && (
-                    <div className="event-date">
-                      <span className="date-icon">📅</span>
-                      {formatDate(event.date)}
+                return (
+                  <div
+                    key={event.id}
+                    className="event-list-row"
+                    onClick={() => handleEventClick(event.id)}
+                    role="listitem"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleEventClick(event.id);
+                      }
+                    }}
+                  >
+                    <div className="col-name">
+                      <span className="event-name">{event.name}</span>
+                      {event.venueName && (
+                        <span className="event-venue-inline">{event.venueName}</span>
+                      )}
                     </div>
-                  )}
-
-                  {event.venueName && (
-                    <div className="event-venue">
-                      <span className="venue-icon">📍</span>
-                      {event.venueName}
+                    <div className="col-type">
+                      <span className={`event-type-badge ${badge.className}`}>
+                        {badge.label}
+                      </span>
                     </div>
-                  )}
-
-                  <div className="event-card-stats">
-                    <div className="stat">
-                      <span className="stat-icon">👥</span>
+                    <div className="col-date">
+                      {formatDate(event.date) || <span className="no-date">-</span>}
+                    </div>
+                    <div className="col-guests">
                       <span className="stat-value">{guestCount}</span>
-                      <span className="stat-label">guest{guestCount !== 1 ? 's' : ''}</span>
                     </div>
-                    <div className="stat">
-                      <span className="stat-icon">🪑</span>
+                    <div className="col-tables">
                       <span className="stat-value">{tableCount}</span>
-                      <span className="stat-label">table{tableCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="col-actions">
+                      <button
+                        className="list-action-btn edit"
+                        onClick={(e) => handleEditClick(e, event)}
+                        title="Edit event details"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="list-action-btn delete"
+                        onClick={(e) => handleDeleteClick(e, event)}
+                        title="Delete event"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
-
-                  <div className="event-card-actions">
-                    <button
-                      className="card-action-btn edit"
-                      onClick={(e) => handleEditClick(e, event)}
-                      title="Edit event details"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="card-action-btn delete"
-                      onClick={(e) => handleDeleteClick(e, event)}
-                      title="Delete event"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           <div className="event-count">
             Showing {events.length} of {MAX_EVENTS} events

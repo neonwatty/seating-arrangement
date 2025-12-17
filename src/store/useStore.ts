@@ -114,6 +114,7 @@ interface AppState extends OnboardingState {
 
   // View state
   activeView: 'event-list' | 'dashboard' | 'canvas' | 'guests';
+  eventListViewMode: 'cards' | 'list';
   sidebarOpen: boolean;
 
   // Group visibility filter (for canvas dimming)
@@ -228,6 +229,7 @@ interface AppState extends OnboardingState {
 
   // Actions - View
   setActiveView: (view: AppState['activeView']) => void;
+  setEventListViewMode: (mode: AppState['eventListViewMode']) => void;
   toggleSidebar: () => void;
 
   // Actions - Group Visibility
@@ -635,6 +637,7 @@ export const useStore = create<AppState>()(
       historyIndex: -1,
       alignmentGuides: [],
       activeView: 'canvas',
+      eventListViewMode: 'cards',
       sidebarOpen: false,
       theme: 'system',
       visibleGroups: 'all',
@@ -1644,6 +1647,7 @@ export const useStore = create<AppState>()(
 
       // View actions
       setActiveView: (activeView) => set({ activeView }),
+      setEventListViewMode: (eventListViewMode) => set({ eventListViewMode }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
       // Theme actions
@@ -2070,6 +2074,7 @@ export const useStore = create<AppState>()(
         events: state.events,
         currentEventId: state.currentEventId,
         theme: state.theme,
+        eventListViewMode: state.eventListViewMode,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
       }),
       onRehydrateStorage: () => (state) => {

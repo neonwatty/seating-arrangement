@@ -366,4 +366,107 @@ test.describe('Multi-Event Management', () => {
       await expect(page.locator('.event-card:has-text("Keep This Event")')).toBeVisible();
     });
   });
+
+  test.describe('Event List View Toggle', () => {
+    test('view toggle is visible in event list', async ({ page }) => {
+      await enterEventList(page);
+      await expect(page.locator('.view-toggle')).toBeVisible();
+    });
+
+    test('default view is cards', async ({ page }) => {
+      await enterEventList(page);
+      // Cards toggle should be active
+      await expect(page.locator('.view-toggle-btn').first()).toHaveClass(/active/);
+      // Event cards grid should be visible
+      await expect(page.locator('.event-cards-grid')).toBeVisible();
+      // List table should not exist
+      await expect(page.locator('.event-list-table')).not.toBeVisible();
+    });
+
+    test('clicking list toggle switches to list view', async ({ page }) => {
+      await enterEventList(page);
+      // Click the list view button (second button)
+      await page.locator('.view-toggle-btn').nth(1).click();
+      // List toggle should be active
+      await expect(page.locator('.view-toggle-btn').nth(1)).toHaveClass(/active/);
+      // Cards toggle should not be active
+      await expect(page.locator('.view-toggle-btn').first()).not.toHaveClass(/active/);
+      // List table should be visible
+      await expect(page.locator('.event-list-table')).toBeVisible();
+      // Cards grid should not exist
+      await expect(page.locator('.event-cards-grid')).not.toBeVisible();
+    });
+
+    test('list view shows header row with columns', async ({ page }) => {
+      await enterEventList(page);
+      await page.locator('.view-toggle-btn').nth(1).click();
+      await expect(page.locator('.event-list-header-row')).toBeVisible();
+      await expect(page.locator('.event-list-header-row .col-name')).toContainText('Name');
+      await expect(page.locator('.event-list-header-row .col-type')).toContainText('Type');
+      await expect(page.locator('.event-list-header-row .col-date')).toContainText('Date');
+      await expect(page.locator('.event-list-header-row .col-guests')).toContainText('Guests');
+      await expect(page.locator('.event-list-header-row .col-tables')).toContainText('Tables');
+    });
+
+    test('list view shows event data in rows', async ({ page }) => {
+      await enterEventList(page);
+      await page.locator('.view-toggle-btn').nth(1).click();
+      // Should have event rows
+      await expect(page.locator('.event-list-row')).toHaveCount(1);
+      // Row should have event name
+      await expect(page.locator('.event-list-row .event-name')).toBeVisible();
+      // Row should have type badge
+      await expect(page.locator('.event-list-row .event-type-badge')).toBeVisible();
+    });
+
+    test('clicking list row enters the event', async ({ page }) => {
+      await enterEventList(page);
+      await page.locator('.view-toggle-btn').nth(1).click();
+      await page.locator('.event-list-row').first().click();
+      await expect(page.locator('.canvas')).toBeVisible({ timeout: 5000 });
+    });
+
+    test('list view edit button opens edit modal', async ({ page }) => {
+      await enterEventList(page);
+      await page.locator('.view-toggle-btn').nth(1).click();
+      await page.locator('.event-list-row .list-action-btn.edit').first().click();
+      await expect(page.locator('.event-form-modal')).toBeVisible();
+      await expect(page.locator('.event-form-modal h2')).toContainText('Edit Event');
+    });
+
+    test('list view delete button opens delete dialog', async ({ page }) => {
+      await enterEventList(page);
+      await page.locator('.view-toggle-btn').nth(1).click();
+      await page.locator('.event-list-row .list-action-btn.delete').first().click();
+      await expect(page.locator('.delete-event-dialog')).toBeVisible();
+    });
+
+    test('toggling back to cards view shows cards', async ({ page }) => {
+      await enterEventList(page);
+      // Switch to list
+      await page.locator('.view-toggle-btn').nth(1).click();
+      await expect(page.locator('.event-list-table')).toBeVisible();
+      // Switch back to cards
+      await page.locator('.view-toggle-btn').first().click();
+      await expect(page.locator('.event-cards-grid')).toBeVisible();
+      await expect(page.locator('.event-list-table')).not.toBeVisible();
+    });
+
+    test('view preference persists after page reload', async ({ page }) => {
+      await enterEventList(page);
+      // Switch to list view
+      await page.locator('.view-toggle-btn').nth(1).click();
+      await expect(page.locator('.event-list-table')).toBeVisible();
+
+      // Reload page
+      await page.reload();
+      // Re-bypass landing page
+      await page.click('button:has-text("Start Planning Free")');
+      await expect(page.locator('.event-list-view')).toBeVisible();
+
+      // List view should still be active
+      await expect(page.locator('.event-list-table')).toBeVisible();
+      await expect(page.locator('.view-toggle-btn').nth(1)).toHaveClass(/active/);
+    });
+  });
 });

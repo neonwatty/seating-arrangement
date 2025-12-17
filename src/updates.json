@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.7.0",
+    "highlights": [
+      "New list view option for your events - toggle between cards and list layout",
+      "List view shows all your events in a compact table format",
+      "See event name, type, date, guest count, and table count at a glance",
+      "Your view preference is saved automatically"
+    ]
+  },
+  {
     "version": "0.6.0",
     "highlights": [
       "Multi-event support - manage up to 10 separate events in one app!",
