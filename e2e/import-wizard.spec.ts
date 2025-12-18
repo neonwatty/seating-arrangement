@@ -960,7 +960,8 @@ test.describe('Import Wizard - Table Assignment Integration', () => {
 
 test.describe('Import Wizard - Platform Detection', () => {
   // Import wizard has issues on mobile viewports - skip these tests on mobile
-  test.beforeEach(async ({ page }, testInfo) => {
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(async ({}, testInfo) => {
     const isMobile = testInfo.project.name.includes('Mobile') || testInfo.project.name.includes('Tablet');
     if (isMobile) {
       test.skip();
