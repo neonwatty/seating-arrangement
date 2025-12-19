@@ -209,6 +209,15 @@ function drawTableCard(
   doc.line(x + margin, foldY, x + width - margin, foldY);
   doc.setLineDashPattern([], 0);
 
+  // Draw decorative accent lines at top and bottom using theme color
+  doc.setDrawColor(themeColors.primary);
+  doc.setLineWidth(1.5);
+  // Top accent line
+  doc.line(x + margin, y + margin, x + width - margin, y + margin);
+  // Bottom accent line (for the front side when folded)
+  doc.line(x + margin, y + height - margin, x + width - margin, y + height - margin);
+  doc.setLineWidth(0.2);
+
   // Get guest count for this table
   const guestCount = event.guests.filter(g => g.tableId === table.id).length;
 
