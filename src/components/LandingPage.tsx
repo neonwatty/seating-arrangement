@@ -11,6 +11,38 @@ export function LandingPage() {
   };
   return (
     <div className="landing-page">
+      {/* Floating Decorative Shapes */}
+      <div className="floating-shapes" aria-hidden="true">
+        {/* Round Table - Top Right */}
+        <svg className="floating-shape shape-table-1" viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r="25" fill="currentColor" opacity="0.6" />
+          <circle cx="30" cy="30" r="18" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+        </svg>
+
+        {/* Chair - Left Side */}
+        <svg className="floating-shape shape-chair-1" viewBox="0 0 40 50">
+          <rect x="8" y="20" width="24" height="25" rx="4" fill="currentColor" opacity="0.5" />
+          <rect x="10" y="5" width="20" height="15" rx="3" fill="currentColor" opacity="0.4" />
+        </svg>
+
+        {/* Guest Circle - Bottom Right */}
+        <svg className="floating-shape shape-guest-1" viewBox="0 0 30 30">
+          <circle cx="15" cy="15" r="12" fill="currentColor" opacity="0.5" />
+        </svg>
+
+        {/* Small Table - Bottom Left */}
+        <svg className="floating-shape shape-table-2" viewBox="0 0 60 60">
+          <circle cx="30" cy="30" r="25" fill="currentColor" opacity="0.5" />
+          <circle cx="30" cy="30" r="18" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+        </svg>
+
+        {/* Chair - Right Side */}
+        <svg className="floating-shape shape-chair-2" viewBox="0 0 40 50">
+          <rect x="8" y="20" width="24" height="25" rx="4" fill="currentColor" opacity="0.4" />
+          <rect x="10" y="5" width="20" height="15" rx="3" fill="currentColor" opacity="0.3" />
+        </svg>
+      </div>
+
       <div className="landing-content">
         {/* Hero Section */}
         <section className="hero-section">
