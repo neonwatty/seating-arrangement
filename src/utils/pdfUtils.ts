@@ -209,13 +209,13 @@ function drawTableCard(
   doc.line(x + margin, foldY, x + width - margin, foldY);
   doc.setLineDashPattern([], 0);
 
-  // Draw decorative accent lines at top and bottom using theme color
+  // Draw decorative accent lines using theme color
   doc.setDrawColor(themeColors.primary);
   doc.setLineWidth(1.5);
-  // Top accent line
+  // Top half accent line (at the top of the card)
   doc.line(x + margin, y + margin, x + width - margin, y + margin);
-  // Bottom accent line (for the front side when folded)
-  doc.line(x + margin, y + height - margin, x + width - margin, y + height - margin);
+  // Bottom half accent line (just below the fold, at top of bottom half)
+  doc.line(x + margin, foldY + margin, x + width - margin, foldY + margin);
   doc.setLineWidth(0.2);
 
   // Get guest count for this table
