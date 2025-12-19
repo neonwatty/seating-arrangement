@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { AnimatedCounter } from './AnimatedCounter';
 import { EmptyState } from './EmptyState';
 import { QRCodePrintView } from './QRCodePrintView';
-import { PDFPreviewModal } from './PDFPreviewModal';
+import { PDFPreviewModal, type PlaceCardOptions } from './PDFPreviewModal';
 import {
   downloadTableCards,
   downloadPlaceCards,
@@ -150,13 +150,40 @@ export function DashboardView() {
     setShowPreviewModal(false);
   };
 
-  const handleDownloadFromPreview = () => {
+  const handleDownloadFromPreview = (options?: PlaceCardOptions) => {
     if (previewType === 'table') {
       handleDownloadTableCards();
     } else {
-      handleDownloadPlaceCards();
+      // Convert PlaceCardOptions to PlaceCardPDFOptions format
+      handleDownloadPlaceCardsWithOptions(options);
     }
     handleClosePreview();
+  };
+
+  const handleDownloadPlaceCardsWithOptions = async (options?: PlaceCardOptions) => {
+    const seatedConfirmed = event.guests.filter(
+      g => g.tableId && g.rsvpStatus === 'confirmed'
+    ).length;
+
+    if (seatedConfirmed === 0) {
+      showToast('Assign confirmed guests to tables first', 'warning');
+      return;
+    }
+
+    setIsGeneratingPlaceCards(true);
+    try {
+      await downloadPlaceCards(event, {
+        includeTableName: options?.includeTableName ?? true,
+        includeDietary: options?.includeDietary ?? true,
+        fontSize: options?.fontSize ?? 'medium',
+      });
+      showToast('Place cards PDF downloaded', 'success');
+    } catch (error) {
+      console.error('Failed to generate place cards:', error);
+      showToast('Failed to generate PDF. Please try again.', 'error');
+    } finally {
+      setIsGeneratingPlaceCards(false);
+    }
   };
 
   return (
@@ -438,6 +465,7 @@ export function DashboardView() {
         title={previewType === 'table' ? 'Table Cards Preview' : 'Place Cards Preview'}
         onDownload={handleDownloadFromPreview}
         isGenerating={isGeneratingPreview}
+        type={previewType}
       />
     </div>
   );

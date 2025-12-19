@@ -159,18 +159,45 @@ function drawTableCard(
   });
 }
 
+// Font size configurations
+const FONT_SIZES = {
+  small: {
+    guestName: 12,
+    tableName: 9,
+    dietary: 7,
+    eventName: 6,
+  },
+  medium: {
+    guestName: 16,
+    tableName: 11,
+    dietary: 8,
+    eventName: 7,
+  },
+  large: {
+    guestName: 20,
+    tableName: 13,
+    dietary: 9,
+    eventName: 8,
+  },
+};
+
+export type FontSize = 'small' | 'medium' | 'large';
+
+export interface PlaceCardPDFOptions {
+  includeTableName?: boolean;
+  includeDietary?: boolean;
+  fontSize?: FontSize;
+}
+
 /**
  * Generate PDF with place cards for guests
  */
 export async function generatePlaceCardsPDF(
   event: Event,
   guests: Guest[],
-  options: {
-    includeTableName?: boolean;
-    includeDietary?: boolean;
-  } = {}
+  options: PlaceCardPDFOptions = {}
 ): Promise<jsPDFInstance> {
-  const { includeTableName = true, includeDietary = true } = options;
+  const { includeTableName = true, includeDietary = true, fontSize = 'medium' } = options;
 
   const { jsPDF } = await loadJsPDF();
 
@@ -218,7 +245,7 @@ export async function generatePlaceCardsPDF(
     const y = yOffset + row * (PLACE_CARD.height + gapY);
 
     const table = event.tables.find(t => t.id === guest.tableId);
-    drawPlaceCard(doc, guest, table, event, x, y, { includeTableName, includeDietary });
+    drawPlaceCard(doc, guest, table, event, x, y, { includeTableName, includeDietary, fontSize });
   });
 
   return doc;
@@ -234,9 +261,10 @@ function drawPlaceCard(
   event: Event,
   x: number,
   y: number,
-  options: { includeTableName: boolean; includeDietary: boolean }
+  options: { includeTableName: boolean; includeDietary: boolean; fontSize: FontSize }
 ): void {
   const { width, height, margin } = PLACE_CARD;
+  const fontSizes = FONT_SIZES[options.fontSize];
 
   // Draw card border
   doc.setDrawColor(COLORS.border);
@@ -252,7 +280,7 @@ function drawPlaceCard(
 
   // Guest name (large, centered)
   const guestName = `${guest.firstName} ${guest.lastName}`.trim();
-  doc.setFontSize(16);
+  doc.setFontSize(fontSizes.guestName);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.text);
 
@@ -264,7 +292,7 @@ function drawPlaceCard(
 
   // Table name (if assigned and option enabled)
   if (options.includeTableName && table) {
-    doc.setFontSize(11);
+    doc.setFontSize(fontSizes.tableName);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(COLORS.textLight);
     doc.text(table.name, x + width / 2, nameY + 8, { align: 'center' });
@@ -284,7 +312,7 @@ function drawPlaceCard(
     }
 
     if (indicators.length > 0) {
-      doc.setFontSize(8);
+      doc.setFontSize(fontSizes.dietary);
       doc.setTextColor(COLORS.textLight);
       doc.text(
         indicators.join(' '),
@@ -296,7 +324,7 @@ function drawPlaceCard(
   }
 
   // Event name (small, bottom left)
-  doc.setFontSize(7);
+  doc.setFontSize(fontSizes.eventName);
   doc.setFont('helvetica', 'italic');
   doc.setTextColor(COLORS.textLight);
   doc.text(event.name, x + margin, y + height - margin);
@@ -356,7 +384,7 @@ export async function previewTableCards(event: Event): Promise<string | null> {
  */
 export async function previewPlaceCards(
   event: Event,
-  options?: { includeTableName?: boolean; includeDietary?: boolean }
+  options?: PlaceCardPDFOptions
 ): Promise<string | null> {
   // Only include confirmed guests with table assignments
   const guests = event.guests.filter(
@@ -386,7 +414,7 @@ export async function downloadTableCards(event: Event): Promise<void> {
  */
 export async function downloadPlaceCards(
   event: Event,
-  options?: { includeTableName?: boolean; includeDietary?: boolean }
+  options?: PlaceCardPDFOptions
 ): Promise<void> {
   // Only include confirmed guests with table assignments
   const guests = event.guests.filter(

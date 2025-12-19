@@ -88,6 +88,129 @@
   color: var(--color-text);
 }
 
+.pdf-preview-btn.options {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem;
+}
+
+.pdf-preview-btn.options:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+.pdf-preview-btn.options.active {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Options Panel */
+.pdf-options-panel {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+  animation: slideDown var(--duration-fast) var(--ease-out);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pdf-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pdf-option-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.pdf-option-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.pdf-option-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+.pdf-font-size-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pdf-font-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.pdf-font-option input[type="radio"] {
+  display: none;
+}
+
+.pdf-font-label {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  transition: all var(--duration-fast);
+}
+
+.pdf-font-option input[type="radio"]:checked + .pdf-font-label {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.pdf-font-label:hover {
+  border-color: var(--color-primary);
+}
+
+.pdf-font-small {
+  font-size: var(--font-size-xs);
+}
+
+.pdf-font-medium {
+  font-size: var(--font-size-sm);
+}
+
+.pdf-font-large {
+  font-size: var(--font-size-base);
+}
+
+.pdf-options-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-light);
+  margin: 0;
+  align-self: center;
+}
+
 .pdf-preview-content {
   flex: 1;
   display: flex;

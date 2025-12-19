@@ -275,3 +275,148 @@ test.describe('PDF Preview', () => {
     expect(download.suggestedFilename()).toContain('.pdf');
   });
 });
+
+// =============================================================================
+// PDF Customization Options Tests
+// =============================================================================
+
+test.describe('PDF Customization Options', () => {
+  test.beforeEach(async ({ page }) => {
+    await enterApp(page);
+    await switchToDashboard(page);
+  });
+
+  test('place cards preview shows options button', async ({ page }) => {
+    // Click the place cards preview button
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+
+    // Wait for modal
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Check for options button (settings cog icon)
+    await expect(page.locator('.pdf-preview-btn.options')).toBeVisible();
+  });
+
+  test('table cards preview does not show options button', async ({ page }) => {
+    // Click the table cards preview button
+    const tableCardsRow = page.locator('.print-material-row').first();
+    await tableCardsRow.locator('.print-material-preview-btn').click();
+
+    // Wait for modal
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Options button should not be visible for table cards
+    await expect(page.locator('.pdf-preview-btn.options')).not.toBeVisible();
+  });
+
+  test('clicking options button shows options panel', async ({ page }) => {
+    // Click the place cards preview button
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+
+    // Wait for modal
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Click options button
+    await page.locator('.pdf-preview-btn.options').click();
+
+    // Options panel should be visible
+    await expect(page.locator('.pdf-options-panel')).toBeVisible();
+  });
+
+  test('options panel has table name checkbox', async ({ page }) => {
+    // Open place cards preview
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Open options panel
+    await page.locator('.pdf-preview-btn.options').click();
+    await expect(page.locator('.pdf-options-panel')).toBeVisible();
+
+    // Check for table name checkbox
+    const tableNameCheckbox = page.locator('.pdf-option-label').filter({ hasText: 'Show table name' });
+    await expect(tableNameCheckbox).toBeVisible();
+    await expect(tableNameCheckbox.locator('input[type="checkbox"]')).toBeChecked();
+  });
+
+  test('options panel has dietary icons checkbox', async ({ page }) => {
+    // Open place cards preview
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Open options panel
+    await page.locator('.pdf-preview-btn.options').click();
+    await expect(page.locator('.pdf-options-panel')).toBeVisible();
+
+    // Check for dietary icons checkbox
+    const dietaryCheckbox = page.locator('.pdf-option-label').filter({ hasText: 'Show dietary icons' });
+    await expect(dietaryCheckbox).toBeVisible();
+    await expect(dietaryCheckbox.locator('input[type="checkbox"]')).toBeChecked();
+  });
+
+  test('options panel has font size options', async ({ page }) => {
+    // Open place cards preview
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Open options panel
+    await page.locator('.pdf-preview-btn.options').click();
+    await expect(page.locator('.pdf-options-panel')).toBeVisible();
+
+    // Check for font size options
+    await expect(page.locator('.pdf-option-title').filter({ hasText: 'Font Size' })).toBeVisible();
+    await expect(page.locator('.pdf-font-label').filter({ hasText: 'Small' })).toBeVisible();
+    await expect(page.locator('.pdf-font-label').filter({ hasText: 'Medium' })).toBeVisible();
+    await expect(page.locator('.pdf-font-label').filter({ hasText: 'Large' })).toBeVisible();
+  });
+
+  test('medium font size is selected by default', async ({ page }) => {
+    // Open place cards preview
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Open options panel
+    await page.locator('.pdf-preview-btn.options').click();
+    await expect(page.locator('.pdf-options-panel')).toBeVisible();
+
+    // Check that medium is selected
+    const mediumOption = page.locator('.pdf-font-option').filter({ hasText: 'Medium' });
+    await expect(mediumOption.locator('input[type="radio"]')).toBeChecked();
+  });
+
+  test('can toggle options button to show/hide panel', async ({ page }) => {
+    // Open place cards preview
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Open options panel
+    await page.locator('.pdf-preview-btn.options').click();
+    await expect(page.locator('.pdf-options-panel')).toBeVisible();
+
+    // Close options panel by clicking again
+    await page.locator('.pdf-preview-btn.options').click();
+    await expect(page.locator('.pdf-options-panel')).not.toBeVisible();
+  });
+
+  test('options button shows active state when panel is open', async ({ page }) => {
+    // Open place cards preview
+    const placeCardsRow = page.locator('.print-material-row').last();
+    await placeCardsRow.locator('.print-material-preview-btn').click();
+    await expect(page.locator('.pdf-preview-modal')).toBeVisible({ timeout: 15000 });
+
+    // Button should not be active initially
+    await expect(page.locator('.pdf-preview-btn.options.active')).not.toBeVisible();
+
+    // Open options panel
+    await page.locator('.pdf-preview-btn.options').click();
+
+    // Button should now be active
+    await expect(page.locator('.pdf-preview-btn.options.active')).toBeVisible();
+  });
+});
