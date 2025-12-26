@@ -38,11 +38,19 @@ function App() {
     show: boolean;
     source: 'landing' | 'value_moment' | 'export_prompt';
   }>({ show: false, source: 'value_moment' });
-  const previousGuestCount = useRef(0);
+  const previousGuestCount = useRef<number | null>(null);
 
   // Monitor guest count for milestone trigger (5+ guests)
+  // Only triggers when user actively adds guests past the milestone, not on initial load
   useEffect(() => {
     const currentCount = event.guests.length;
+
+    // On first render, just initialize the ref without triggering
+    if (previousGuestCount.current === null) {
+      previousGuestCount.current = currentCount;
+      return;
+    }
+
     const wasBelow = previousGuestCount.current < 5;
     const isNowAtOrAbove = currentCount >= 5;
 
