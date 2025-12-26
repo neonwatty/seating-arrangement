@@ -34,8 +34,10 @@ function App() {
   } = useStore();
 
   // Email capture modal state
-  const [showEmailCapture, setShowEmailCapture] = useState(false);
-  const [emailCaptureSource, setEmailCaptureSource] = useState<'landing' | 'value_moment' | 'export_prompt'>('value_moment');
+  const [emailCaptureState, setEmailCaptureState] = useState<{
+    show: boolean;
+    source: 'landing' | 'value_moment' | 'export_prompt';
+  }>({ show: false, source: 'value_moment' });
   const previousGuestCount = useRef(0);
 
   // Monitor guest count for milestone trigger (5+ guests)
@@ -47,9 +49,10 @@ function App() {
     if (wasBelow && isNowAtOrAbove && hasReachedGuestMilestone(currentCount)) {
       if (shouldShowEmailCapture('guestMilestone')) {
         markTriggerShown('guestMilestone');
-        setEmailCaptureSource('value_moment');
         // Small delay to let the guest addition complete visually
-        setTimeout(() => setShowEmailCapture(true), 500);
+        setTimeout(() => {
+          setEmailCaptureState({ show: true, source: 'value_moment' });
+        }, 500);
       }
     }
 
@@ -62,7 +65,7 @@ function App() {
     } else {
       trackDismissal();
     }
-    setShowEmailCapture(false);
+    setEmailCaptureState(prev => ({ ...prev, show: false }));
   };
 
   // Global keyboard shortcuts
@@ -205,11 +208,11 @@ function App() {
     <>
       <AppRouter />
       <ToastContainer />
-      {showEmailCapture && (
+      {emailCaptureState.show && (
         <EmailCaptureModal
           onClose={() => handleEmailCaptureClose(false)}
           onSuccess={() => handleEmailCaptureClose(true)}
-          source={emailCaptureSource}
+          source={emailCaptureState.source}
         />
       )}
     </>
