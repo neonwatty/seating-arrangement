@@ -154,7 +154,7 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isLastStep, isFirstStep, handleComplete, handleSkip]);
+  }, [isOpen, isLastStep, isFirstStep, handleComplete, handleSkip, stepProps.action, setActiveView]);
 
   if (!isOpen) return null;
 

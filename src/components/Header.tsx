@@ -1,8 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { version } from '../../package.json';
 import { UpdatesButton } from './UpdatesPopup';
+import { EmailCaptureModal } from './EmailCaptureModal';
+import {
+  shouldShowEmailCapture,
+  markAsSubscribed,
+  trackDismissal,
+} from '../utils/emailCaptureManager';
 import './Header.css';
 
 interface HeaderProps {
@@ -15,6 +22,21 @@ export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
   const navigate = useNavigate();
   const { eventId } = useParams<{ eventId?: string }>();
   const { event, setEventName, theme, cycleTheme, currentEventId } = useStore();
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
+
+  // Check if user has already subscribed (don't show button if so)
+  const canShowEmailButton = shouldShowEmailCapture('guestMilestone') ||
+                             shouldShowEmailCapture('optimizerSuccess') ||
+                             shouldShowEmailCapture('exportAttempt');
+
+  const handleEmailCaptureClose = (subscribed = false) => {
+    if (subscribed) {
+      markAsSubscribed();
+    } else {
+      trackDismissal();
+    }
+    setShowEmailCapture(false);
+  };
 
   // Check if we're inside an event (has eventId in URL)
   const isInsideEvent = !!eventId || (currentEventId && window.location.hash.includes('/events/'));
@@ -72,6 +94,15 @@ export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
         </h1>
         <span className="version-badge">v{version}</span>
         <UpdatesButton variant="header" />
+        {canShowEmailButton && (
+          <button
+            className="subscribe-btn"
+            onClick={() => setShowEmailCapture(true)}
+            title="Get notified of updates"
+          >
+            Subscribe
+          </button>
+        )}
         {onStartTour && (
           <button
             className="tour-btn"
@@ -108,6 +139,14 @@ export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
           </div>
         )}
       </div>
+      {showEmailCapture && createPortal(
+        <EmailCaptureModal
+          onClose={() => handleEmailCaptureClose(false)}
+          onSuccess={() => handleEmailCaptureClose(true)}
+          source="value_moment"
+        />,
+        document.body
+      )}
     </header>
   );
 }

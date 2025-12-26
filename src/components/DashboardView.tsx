@@ -6,6 +6,7 @@ import { QRCodePrintView } from './QRCodePrintView';
 import { PDFPreviewModal, type PlaceCardOptions, type TableCardOptions } from './PDFPreviewModal';
 import { ShareLinkModal } from './ShareLinkModal';
 import { OnboardingWizard } from './OnboardingWizard';
+import { EmailCaptureModal } from './EmailCaptureModal';
 import { QR_TOUR_STEPS } from '../data/onboardingSteps';
 import {
   downloadTableCards,
@@ -13,6 +14,12 @@ import {
   previewTableCards,
   previewPlaceCards
 } from '../utils/pdfUtils';
+import {
+  shouldShowEmailCapture,
+  markTriggerShown,
+  markAsSubscribed,
+  trackDismissal,
+} from '../utils/emailCaptureManager';
 import { showToast } from './toastStore';
 import './DashboardView.css';
 
@@ -29,6 +36,7 @@ export function DashboardView() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [isGeneratingTableCards, setIsGeneratingTableCards] = useState(false);
   const [isGeneratingPlaceCards, setIsGeneratingPlaceCards] = useState(false);
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
 
   // PDF Preview state
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -49,6 +57,22 @@ export function DashboardView() {
   const seatingPercentage = totalGuests > 0 ? Math.round((assignedGuests / totalGuests) * 100) : 0;
   const totalCapacity = event.tables.reduce((sum, t) => sum + t.capacity, 0);
 
+  const triggerEmailCaptureOnExport = () => {
+    if (shouldShowEmailCapture('exportAttempt')) {
+      markTriggerShown('exportAttempt');
+      setTimeout(() => setShowEmailCapture(true), 500);
+    }
+  };
+
+  const handleEmailCaptureClose = (subscribed = false) => {
+    if (subscribed) {
+      markAsSubscribed();
+    } else {
+      trackDismissal();
+    }
+    setShowEmailCapture(false);
+  };
+
   const handleExport = () => {
     const json = exportEvent();
     const blob = new Blob([json], { type: 'application/json' });
@@ -58,6 +82,7 @@ export function DashboardView() {
     a.download = `${event.name.replace(/\s+/g, '-').toLowerCase()}-seating.json`;
     a.click();
     URL.revokeObjectURL(url);
+    triggerEmailCaptureOnExport();
   };
 
   const handlePreviewTableCards = async () => {
@@ -168,6 +193,7 @@ export function DashboardView() {
       handleDownloadPlaceCardsWithOptions(placeOptions ?? currentPlaceOptions);
     }
     handleClosePreview();
+    triggerEmailCaptureOnExport();
   };
 
   const handleDownloadTableCardsWithOptions = async (options?: TableCardOptions) => {
@@ -512,6 +538,15 @@ export function DashboardView() {
         onClose={() => setShowShareModal(false)}
         event={event}
       />
+
+      {/* Email Capture Modal */}
+      {showEmailCapture && (
+        <EmailCaptureModal
+          onClose={() => handleEmailCaptureClose(false)}
+          onSuccess={() => handleEmailCaptureClose(true)}
+          source="export_prompt"
+        />
+      )}
     </div>
   );
 }

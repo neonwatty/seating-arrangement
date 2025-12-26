@@ -102,11 +102,11 @@ test.describe('Landing Page', () => {
 
   test.describe('Email Capture Section', () => {
     test('displays email capture heading', async ({ page }) => {
-      await expect(page.locator('.email-capture h2')).toHaveText('Stay in the loop');
+      await expect(page.locator('.email-capture h2')).toHaveText('Get Updates');
     });
 
     test('displays email description', async ({ page }) => {
-      await expect(page.locator('.email-description')).toContainText('notified about new features');
+      await expect(page.locator('.email-description')).toContainText('ship something new');
     });
 
     test('subscribe button is visible with correct text', async ({ page }) => {
@@ -115,16 +115,160 @@ test.describe('Landing Page', () => {
       await expect(subscribeBtn).toHaveText('Subscribe for Updates');
     });
 
-    test('subscribe button links to Google Form', async ({ page }) => {
+    test('subscribe button opens email capture modal', async ({ page }) => {
       const subscribeBtn = page.locator('.subscribe-button');
-      const href = await subscribeBtn.getAttribute('href');
-      expect(href).toContain('docs.google.com/forms');
+      await subscribeBtn.click();
+
+      // Modal should appear
+      const modal = page.locator('.email-capture-modal');
+      await expect(modal).toBeVisible();
+      await expect(modal.locator('h2')).toHaveText('Get Updates');
+    });
+  });
+
+  test.describe('Email Capture Modal', () => {
+    test.beforeEach(async ({ page }) => {
+      // Open the modal before each test
+      await page.locator('.subscribe-button').click();
+      await expect(page.locator('.email-capture-modal')).toBeVisible();
     });
 
-    test('subscribe button opens in new tab', async ({ page }) => {
-      const subscribeBtn = page.locator('.subscribe-button');
-      await expect(subscribeBtn).toHaveAttribute('target', '_blank');
-      await expect(subscribeBtn).toHaveAttribute('rel', 'noopener noreferrer');
+    test('modal displays email input field', async ({ page }) => {
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await expect(emailInput).toBeVisible();
+      await expect(emailInput).toHaveAttribute('placeholder', 'you@example.com');
+    });
+
+    test('modal displays description text', async ({ page }) => {
+      const description = page.locator('.email-capture-modal .modal-description');
+      await expect(description).toContainText('ship something new');
+    });
+
+    test('modal has cancel and subscribe buttons', async ({ page }) => {
+      await expect(page.locator('.email-capture-modal .btn-cancel')).toHaveText('Maybe Later');
+      await expect(page.locator('.email-capture-modal .btn-submit')).toHaveText('Subscribe');
+    });
+
+    test('close button closes modal', async ({ page }) => {
+      const closeBtn = page.locator('.email-capture-modal .close-btn');
+      await closeBtn.click();
+      await expect(page.locator('.email-capture-modal')).not.toBeVisible();
+    });
+
+    test('cancel button closes modal', async ({ page }) => {
+      const cancelBtn = page.locator('.email-capture-modal .btn-cancel');
+      await cancelBtn.click();
+      await expect(page.locator('.email-capture-modal')).not.toBeVisible();
+    });
+
+    test('clicking overlay closes modal', async ({ page }) => {
+      // Click on the overlay (outside the modal)
+      await page.locator('.email-capture-modal-overlay').click({ position: { x: 10, y: 10 } });
+      await expect(page.locator('.email-capture-modal')).not.toBeVisible();
+    });
+
+    test('email input is required', async ({ page }) => {
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await expect(emailInput).toHaveAttribute('required', '');
+    });
+
+    test('email input auto-focuses on modal open', async ({ page }) => {
+      // Wait a moment for auto-focus
+      await page.waitForTimeout(200);
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await expect(emailInput).toBeFocused();
+    });
+
+    test('shows loading state on submit', async ({ page }) => {
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await emailInput.fill('test@example.com');
+
+      // Use a promise to control when the route completes
+      let resolveRoute: () => void;
+      const routePromise = new Promise<void>(resolve => { resolveRoute = resolve; });
+
+      // Intercept the Formspree request - hold it until we verify loading state
+      await page.route('**/formspree.io/**', async (route) => {
+        await routePromise;
+        await route.fulfill({ status: 200, body: JSON.stringify({ ok: true }) });
+      });
+
+      const submitBtn = page.locator('.email-capture-modal .btn-submit');
+      await submitBtn.click();
+
+      // Should show loading state
+      await expect(submitBtn).toContainText('Subscribing...');
+      await expect(page.locator('.email-capture-modal .spinner')).toBeVisible();
+
+      // Release the route and cleanup
+      resolveRoute!();
+      await page.unrouteAll({ behavior: 'ignoreErrors' });
+    });
+
+    test('shows success state after submission', async ({ page }) => {
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await emailInput.fill('test@example.com');
+
+      // Mock successful Formspree response
+      await page.route('**/formspree.io/**', async (route) => {
+        await route.fulfill({ status: 200, body: JSON.stringify({ ok: true }) });
+      });
+
+      await page.locator('.email-capture-modal .btn-submit').click();
+
+      // Should show success state
+      const successState = page.locator('.email-capture-modal .success-state');
+      await expect(successState).toBeVisible();
+      await expect(successState.locator('h2')).toHaveText("You're subscribed!");
+      await expect(page.locator('.email-capture-modal .success-icon')).toBeVisible();
+    });
+
+    test('modal auto-closes after success', async ({ page }) => {
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await emailInput.fill('test@example.com');
+
+      // Mock successful Formspree response
+      await page.route('**/formspree.io/**', async (route) => {
+        await route.fulfill({ status: 200, body: JSON.stringify({ ok: true }) });
+      });
+
+      await page.locator('.email-capture-modal .btn-submit').click();
+
+      // Wait for success state
+      await expect(page.locator('.email-capture-modal .success-state')).toBeVisible();
+
+      // Modal should auto-close after ~2 seconds
+      await expect(page.locator('.email-capture-modal')).not.toBeVisible({ timeout: 3000 });
+    });
+
+    test('shows error toast on submission failure', async ({ page }) => {
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await emailInput.fill('test@example.com');
+
+      // Mock failed Formspree response
+      await page.route('**/formspree.io/**', async (route) => {
+        await route.fulfill({ status: 500, body: JSON.stringify({ error: 'Server error' }) });
+      });
+
+      await page.locator('.email-capture-modal .btn-submit').click();
+
+      // Should show error toast
+      await expect(page.locator('.toast-error')).toBeVisible();
+      await expect(page.locator('.toast-error')).toContainText('Failed to subscribe');
+
+      // Modal should remain open
+      await expect(page.locator('.email-capture-modal')).toBeVisible();
+    });
+
+    test('prevents submission with invalid email', async ({ page }) => {
+      const emailInput = page.locator('.email-capture-modal input[type="email"]');
+      await emailInput.fill('invalid-email');
+
+      const submitBtn = page.locator('.email-capture-modal .btn-submit');
+      await submitBtn.click();
+
+      // Modal should still be visible (HTML5 validation prevents submission)
+      await expect(page.locator('.email-capture-modal')).toBeVisible();
     });
   });
 
@@ -144,6 +288,62 @@ test.describe('Landing Page', () => {
 
     test('displays updates button', async ({ page }) => {
       await expect(page.locator('.footer-meta .updates-btn')).toBeVisible();
+    });
+  });
+
+  test.describe('Updates Popup', () => {
+    test.beforeEach(async ({ page }) => {
+      // Click the updates button to open the popup
+      await page.locator('.footer-meta .updates-btn').click();
+      await expect(page.locator('.updates-popup')).toBeVisible();
+    });
+
+    test('displays What\'s New header', async ({ page }) => {
+      await expect(page.locator('.updates-header h2')).toHaveText("What's New");
+    });
+
+    test('displays subscribe link in footer for non-subscribed users', async ({ page }) => {
+      const subscribeLink = page.locator('.updates-subscribe-link');
+      await expect(subscribeLink).toBeVisible();
+      await expect(subscribeLink).toHaveText('Get notified of new updates');
+    });
+
+    test('subscribe link opens email capture modal', async ({ page }) => {
+      const subscribeLink = page.locator('.updates-subscribe-link');
+      await subscribeLink.click();
+
+      // Modal should appear (use first() in case of duplicate modals)
+      const modal = page.locator('.email-capture-modal').first();
+      await expect(modal).toBeVisible();
+      await expect(modal.locator('h2')).toHaveText('Get Updates');
+    });
+
+    test('close button closes popup', async ({ page }) => {
+      await page.locator('.updates-close').click();
+      await expect(page.locator('.updates-popup')).not.toBeVisible();
+    });
+
+    test('hides subscribe link for subscribed users', async ({ page }) => {
+      // Close the popup first
+      await page.locator('.updates-close').click();
+
+      // Set user as subscribed
+      await page.evaluate(() => {
+        localStorage.setItem('seatify_email_capture', JSON.stringify({
+          hasSubscribed: true,
+          dismissCount: 0,
+          lastDismissed: null,
+          triggersShown: { guestMilestone: false, optimizerSuccess: false, exportAttempt: false }
+        }));
+      });
+
+      // Reload page to pick up new localStorage state
+      await page.reload();
+      await page.locator('.footer-meta .updates-btn').click();
+      await expect(page.locator('.updates-popup')).toBeVisible();
+
+      // Subscribe link should not be visible
+      await expect(page.locator('.updates-subscribe-link')).not.toBeVisible();
     });
   });
 
@@ -197,6 +397,22 @@ test.describe('Landing Page - Mobile Responsive', () => {
     // Scroll to email capture section
     await page.locator('.email-capture').scrollIntoViewIfNeeded();
     await expect(page.locator('.subscribe-button')).toBeVisible();
+  });
+
+  test('email capture modal opens and works on mobile', async ({ page }) => {
+    await page.goto('/');
+
+    // Scroll to and click subscribe button
+    await page.locator('.email-capture').scrollIntoViewIfNeeded();
+    await page.locator('.subscribe-button').click();
+
+    // Modal should appear
+    const modal = page.locator('.email-capture-modal');
+    await expect(modal).toBeVisible();
+
+    // Close button should work
+    await modal.locator('.close-btn').click();
+    await expect(modal).not.toBeVisible();
   });
 
   test('CTA button navigates to app on mobile', async ({ page }) => {

@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
 import { version } from '../../package.json';
 import { UpdatesButton } from './UpdatesPopup';
+import { EmailCaptureModal } from './EmailCaptureModal';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
 
   const handleEnterApp = () => {
     navigate('/events');
@@ -309,17 +312,23 @@ export function LandingPage() {
 
         {/* Email Capture */}
         <section className="email-capture">
-          <h2>Stay in the loop</h2>
-          <p className="email-description">Get notified about new features and updates.</p>
-          <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLScCTLlZ7XzOmKCtkJugnadmzx9F21l9v-lAQWjBs67mVHrElg/viewform"
-            target="_blank"
-            rel="noopener noreferrer"
+          <h2>Get Updates</h2>
+          <p className="email-description">We'll email you when we ship something new. No spam.</p>
+          <button
             className="subscribe-button"
+            onClick={() => setShowEmailCapture(true)}
           >
             Subscribe for Updates
-          </a>
+          </button>
         </section>
+
+        {/* Email Capture Modal */}
+        {showEmailCapture && (
+          <EmailCaptureModal
+            onClose={() => setShowEmailCapture(false)}
+            source="landing"
+          />
+        )}
 
         {/* Footer */}
         <footer className="landing-footer">

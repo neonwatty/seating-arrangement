@@ -182,11 +182,31 @@
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--color-border-light);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .current-version {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
+}
+
+.updates-subscribe-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.updates-subscribe-link:hover {
+  color: var(--color-primary-hover);
 }
 
 /* Mobile responsive */

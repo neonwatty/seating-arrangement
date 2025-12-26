@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import type { Guest, Table, Constraint } from '../types';
 import { getFullName } from '../types';
+import { EmailCaptureModal } from './EmailCaptureModal';
+import {
+  shouldShowEmailCapture,
+  markTriggerShown,
+  markAsSubscribed,
+  trackDismissal,
+} from '../utils/emailCaptureManager';
 import './OptimizeView.css';
 
 interface OptimizationResult {
@@ -26,6 +33,7 @@ export function OptimizeView() {
     guestIds: [] as string[],
     priority: 'preferred' as Constraint['priority'],
   });
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
 
   const unassignedGuests = event.guests.filter(g => !g.tableId && g.rsvpStatus !== 'declined');
   const totalCapacity = event.tables.reduce((sum, t) => sum + t.capacity, 0);
@@ -56,6 +64,21 @@ export function OptimizeView() {
     });
 
     setResult(null);
+
+    // Trigger email capture after successful optimization
+    if (shouldShowEmailCapture('optimizerSuccess')) {
+      markTriggerShown('optimizerSuccess');
+      setTimeout(() => setShowEmailCapture(true), 500);
+    }
+  };
+
+  const handleEmailCaptureClose = (subscribed = false) => {
+    if (subscribed) {
+      markAsSubscribed();
+    } else {
+      trackDismissal();
+    }
+    setShowEmailCapture(false);
   };
 
   const handleAddConstraint = () => {
@@ -351,6 +374,14 @@ export function OptimizeView() {
           )}
         </div>
       </div>
+
+      {showEmailCapture && (
+        <EmailCaptureModal
+          onClose={() => handleEmailCaptureClose(false)}
+          onSuccess={() => handleEmailCaptureClose(true)}
+          source="value_moment"
+        />
+      )}
     </div>
   );
 }

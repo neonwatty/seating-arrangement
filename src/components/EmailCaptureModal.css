@@ -1,0 +1,300 @@
+/* Email Capture Modal Styles */
+
+/* Modal Overlay */
+.email-capture-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(61, 44, 36, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 2rem;
+  animation: overlayFade var(--duration-normal) var(--ease-out);
+}
+
+@keyframes overlayFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Container */
+.email-capture-modal {
+  background: var(--color-bg);
+  border-radius: var(--radius-xl);
+  width: 440px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-xl);
+  animation: modalSlideUp var(--duration-slow) var(--ease-spring);
+  overflow: hidden;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Header */
+.email-capture-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.email-capture-modal .modal-header h2 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.email-capture-modal .close-btn {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.email-capture-modal .close-btn:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.email-capture-modal .close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal Content */
+.email-capture-modal form {
+  padding: 1.5rem;
+}
+
+.email-capture-modal .modal-description {
+  margin: 0 0 1.25rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+/* Form Elements */
+.email-capture-modal .form-row {
+  margin-bottom: 1.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.email-capture-modal .form-row label {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.email-capture-modal .form-row input[type='email'] {
+  display: block;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: all var(--duration-fast) var(--ease-out);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.email-capture-modal input[type='email']:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.email-capture-modal input[type='email']:disabled {
+  background: var(--color-bg-secondary);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.email-capture-modal input[type='email']::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Form Actions */
+.email-capture-modal .form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.email-capture-modal .btn-cancel {
+  padding: 0.75rem 1.25rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.email-capture-modal .btn-cancel:hover:not(:disabled) {
+  border-color: var(--color-border-dark);
+  color: var(--color-text);
+}
+
+.email-capture-modal .btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.email-capture-modal .btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-bounce);
+  box-shadow: 0 4px 12px rgba(249, 112, 102, 0.3);
+  min-width: 120px;
+}
+
+.email-capture-modal .btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(249, 112, 102, 0.4);
+}
+
+.email-capture-modal .btn-submit:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Loading Spinner */
+.email-capture-modal .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success State */
+.email-capture-modal .success-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  animation: successFade var(--duration-normal) var(--ease-out);
+}
+
+@keyframes successFade {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.email-capture-modal .success-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.25rem;
+  background: var(--color-success-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: successPop var(--duration-slow) var(--ease-spring);
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.email-capture-modal .success-icon svg {
+  width: 32px;
+  height: 32px;
+  color: var(--color-success);
+}
+
+.email-capture-modal .success-state h2 {
+  margin: 0 0 0.5rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.email-capture-modal .success-state p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .email-capture-modal {
+    width: 100%;
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+
+  .email-capture-modal .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .email-capture-modal .btn-cancel,
+  .email-capture-modal .btn-submit {
+    width: 100%;
+  }
+}

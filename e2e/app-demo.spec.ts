@@ -220,3 +220,43 @@ test.describe('Optimization Feature', () => {
     }
   });
 });
+
+test.describe('Header Subscribe Button', () => {
+  // Helper to navigate to events page
+  async function setupEventsPage(page: import('@playwright/test').Page, subscribed = false) {
+    await page.addInitScript(({ subscribed }) => {
+      if (subscribed) {
+        localStorage.setItem('seatify_email_capture', JSON.stringify({
+          hasSubscribed: true,
+          dismissCount: 0,
+          lastDismissed: null,
+          triggersShown: { guestMilestone: false, optimizerSuccess: false, exportAttempt: false }
+        }));
+      }
+      const data = { state: { hasCompletedOnboarding: true }, version: 11 };
+      localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
+    }, { subscribed });
+    await page.goto('/');
+    await page.click('button:has-text("Start Planning Free")');
+    await page.waitForURL(/\/#\/events/);
+    await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+    // Wait for any animations/transitions to complete
+    await page.waitForTimeout(500);
+  }
+
+  test('subscribe button is visible in header for non-subscribed users', async ({ page }) => {
+    await setupEventsPage(page, false);
+
+    // Subscribe button should be visible in header
+    const subscribeBtn = page.locator('.header .subscribe-btn');
+    await expect(subscribeBtn).toBeVisible();
+    await expect(subscribeBtn).toHaveText('Subscribe');
+  });
+
+  test('subscribe button hidden for subscribed users', async ({ page }) => {
+    await setupEventsPage(page, true);
+
+    // Subscribe button should not be visible
+    await expect(page.locator('.header .subscribe-btn')).not.toBeVisible();
+  });
+});
