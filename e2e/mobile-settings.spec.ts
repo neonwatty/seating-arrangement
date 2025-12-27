@@ -36,7 +36,8 @@ async function enterAppMobile(page: import('@playwright/test').Page) {
 }
 
 // Skip on chromium in CI (mobile tests need mobile viewport)
-test.beforeEach(async (_fixtures, testInfo) => {
+// eslint-disable-next-line no-empty-pattern
+test.beforeEach(async ({ }, testInfo) => {
   if (testInfo.project.name === 'chromium' && process.env.CI) {
     test.skip(true, 'Mobile settings tests require mobile viewport - skipped on chromium in CI');
   }
