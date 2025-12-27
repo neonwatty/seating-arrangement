@@ -1,15 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
 import { version } from '../../package.json';
 import { UpdatesButton } from './UpdatesPopup';
 import { EmailCaptureModal } from './EmailCaptureModal';
+import { trackCTAClick, trackAppEntry } from '../utils/analytics';
+import { captureUtmParams } from '../utils/utm';
 
 export function LandingPage() {
   const navigate = useNavigate();
   const [showEmailCapture, setShowEmailCapture] = useState(false);
 
+  // Capture UTM parameters on landing page load
+  useEffect(() => {
+    captureUtmParams();
+  }, []);
+
   const handleEnterApp = () => {
+    trackCTAClick('hero');
+    trackAppEntry();
     navigate('/events');
   };
   return (

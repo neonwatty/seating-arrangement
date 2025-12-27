@@ -1,5 +1,6 @@
 // React Router v6 with HashRouter for GitHub Pages compatibility
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { LandingPage } from '../components/LandingPage';
 import { EventListView } from '../components/EventListView';
 import { QRTableInfoPage } from '../components/QRTableInfoPage';
@@ -9,6 +10,7 @@ import { DashboardView } from '../components/DashboardView';
 import { Canvas } from '../components/Canvas';
 import { Sidebar } from '../components/Sidebar';
 import { GuestManagementView } from '../components/GuestManagementView';
+import { trackPageView } from '../utils/analytics';
 
 function CanvasView() {
   return (
@@ -19,9 +21,33 @@ function CanvasView() {
   );
 }
 
+// Track page views on route changes
+function PageViewTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Map routes to human-readable page titles
+    const getPageTitle = (pathname: string): string => {
+      if (pathname === '/') return 'Landing Page';
+      if (pathname === '/events') return 'Event List';
+      if (pathname.includes('/dashboard')) return 'Dashboard';
+      if (pathname.includes('/canvas')) return 'Canvas';
+      if (pathname.includes('/guests')) return 'Guest Management';
+      if (pathname.includes('/table/')) return 'Table QR Info';
+      if (pathname.includes('/share')) return 'Shared View';
+      return 'Seatify';
+    };
+
+    trackPageView(location.pathname, getPageTitle(location.pathname));
+  }, [location.pathname]);
+
+  return null;
+}
+
 export function AppRouter() {
   return (
     <HashRouter>
+      <PageViewTracker />
       <Routes>
         {/* Landing page */}
         <Route path="/" element={<LandingPage />} />

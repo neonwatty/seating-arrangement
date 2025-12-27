@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { submitEmail } from '../utils/formspree';
 import { showToast } from './toastStore';
+import { trackEmailSignup } from '../utils/analytics';
 import './EmailCaptureModal.css';
 
 interface EmailCaptureModalProps {
@@ -52,6 +53,8 @@ export function EmailCaptureModal({ onClose, onSuccess, source = 'landing' }: Em
         capture_source: source,
       });
 
+      // Track successful email signup
+      trackEmailSignup(source);
       setModalState('success');
     } catch (error) {
       console.error('Email submission failed:', error);
