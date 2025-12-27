@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { EventFormModal } from './EventFormModal';
 import { DeleteEventDialog } from './DeleteEventDialog';
+import { MobileSettingsHeader } from './MobileSettingsHeader';
+import { EmailCaptureModal } from './EmailCaptureModal';
+import { shouldShowEmailCapture } from '../utils/emailCaptureManager';
 import type { Event } from '../types';
 import './EventListView.css';
 
@@ -48,6 +51,12 @@ export function EventListView() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<Event | null>(null);
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
+
+  // Check if user has already subscribed (don't show button if so)
+  const canShowEmailButton = shouldShowEmailCapture('guestMilestone') ||
+                             shouldShowEmailCapture('optimizerSuccess') ||
+                             shouldShowEmailCapture('exportAttempt');
 
   const handleEventClick = (eventId: string) => {
     switchEvent(eventId);
@@ -87,6 +96,14 @@ export function EventListView() {
 
   return (
     <div className="event-list-view">
+      {/* Mobile Settings Header - only visible on mobile */}
+      <div className="mobile-settings-container">
+        <MobileSettingsHeader
+          onSubscribe={() => setShowEmailCapture(true)}
+          canShowEmailButton={canShowEmailButton}
+        />
+      </div>
+
       <div className="event-list-header">
         <div className="header-content">
           <h1>Your Events</h1>
@@ -312,6 +329,13 @@ export function EventListView() {
         <DeleteEventDialog
           event={deletingEvent}
           onClose={() => setDeletingEvent(null)}
+        />
+      )}
+
+      {showEmailCapture && (
+        <EmailCaptureModal
+          onClose={() => setShowEmailCapture(false)}
+          source="landing"
         />
       )}
     </div>

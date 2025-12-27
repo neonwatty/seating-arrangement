@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { version } from '../../package.json';
+import { UpdatesButton } from './UpdatesPopup';
 import type { TableShape } from '../types';
 import './MobileToolbarMenu.css';
 
@@ -13,6 +16,11 @@ interface MobileToolbarMenuProps {
   onToggleRelationships?: () => void;
   showGridControls?: boolean;
   onToggleGridControls?: () => void;
+  // Settings props
+  onShowHelp?: () => void;
+  onStartTour?: () => void;
+  onSubscribe?: () => void;
+  canShowEmailButton?: boolean;
 }
 
 export function MobileToolbarMenu({
@@ -22,11 +30,17 @@ export function MobileToolbarMenu({
   onToggleRelationships,
   showGridControls,
   onToggleGridControls,
+  onShowHelp,
+  onStartTour,
+  onSubscribe,
+  canShowEmailButton,
 }: MobileToolbarMenuProps) {
-  const { event, addTable, activeView, setActiveView, optimizeSeating, resetSeating, hasOptimizationSnapshot, canvas, setZoom, recenterCanvas } = useStore();
+  const { event, addTable, activeView, setActiveView, optimizeSeating, resetSeating, hasOptimizationSnapshot, canvas, setZoom, recenterCanvas, theme, cycleTheme, currentEventId } = useStore();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [showTableSubmenu, setShowTableSubmenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuSheetRef = useRef<HTMLDivElement>(null);
 
   // Check optimization state
   const hasRelationships = event.guests.some(g => g.relationships.length > 0);
@@ -34,10 +48,13 @@ export function MobileToolbarMenu({
   const canOptimize = hasRelationships && hasTablesWithCapacity && event.guests.length > 1;
   const hasSnapshot = hasOptimizationSnapshot();
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside (check both bottom nav and menu sheet)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const isOutsideBottomNav = menuRef.current && !menuRef.current.contains(target);
+      const isOutsideMenuSheet = !menuSheetRef.current || !menuSheetRef.current.contains(target);
+      if (isOutsideBottomNav && isOutsideMenuSheet) {
         setIsOpen(false);
         setShowTableSubmenu(false);
       }
@@ -61,8 +78,18 @@ export function MobileToolbarMenu({
   }, [isOpen]);
 
   const handleViewChange = (view: ActiveView) => {
+    if (currentEventId) {
+      navigate(`/events/${currentEventId}/${view}`);
+    }
     setActiveView(view);
     setIsOpen(false);
+  };
+
+  const handleBottomNavClick = (view: 'canvas' | 'guests') => {
+    if (currentEventId) {
+      navigate(`/events/${currentEventId}/${view}`);
+    }
+    setActiveView(view);
   };
 
   const handleAddTable = (shape: TableShape) => {
@@ -109,12 +136,53 @@ export function MobileToolbarMenu({
     }
   };
 
+  const handleShowHelp = () => {
+    if (onShowHelp) {
+      onShowHelp();
+      setIsOpen(false);
+    }
+  };
+
+  const handleStartTour = () => {
+    if (onStartTour) {
+      onStartTour();
+      setIsOpen(false);
+    }
+  };
+
+  const handleSubscribe = () => {
+    if (onSubscribe) {
+      onSubscribe();
+      setIsOpen(false);
+    }
+  };
+
+  const handleCycleTheme = () => {
+    cycleTheme();
+  };
+
+  const getThemeLabel = () => {
+    switch (theme) {
+      case 'light': return 'Light';
+      case 'dark': return 'Dark';
+      default: return 'System';
+    }
+  };
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case 'light': return '\u2600'; // Sun
+      case 'dark': return '\u263D'; // Moon
+      default: return '\u2699'; // Gear (system)
+    }
+  };
+
   // Render fixed-position elements via portal to avoid transform containment issues
   const bottomNavContent = (
     <nav className="mobile-bottom-nav" ref={menuRef}>
       <button
         className={`bottom-nav-item ${activeView === 'canvas' ? 'active' : ''}`}
-        onClick={() => setActiveView('canvas')}
+        onClick={() => handleBottomNavClick('canvas')}
       >
         <svg viewBox="0 0 24 24" width="24" height="24">
           <path fill="currentColor" d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15h14v3H5z"/>
@@ -123,7 +191,7 @@ export function MobileToolbarMenu({
       </button>
       <button
         className={`bottom-nav-item ${activeView === 'guests' ? 'active' : ''}`}
-        onClick={() => setActiveView('guests')}
+        onClick={() => handleBottomNavClick('guests')}
       >
         <svg viewBox="0 0 24 24" width="24" height="24">
           <path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
@@ -153,8 +221,8 @@ export function MobileToolbarMenu({
 
   const menuContent = isOpen && (
     <>
-      <div className="mobile-menu-backdrop" onClick={() => setIsOpen(false)} />
-      <div className="mobile-menu-sheet" role="menu">
+      <div className="mobile-menu-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }} />
+      <div className="mobile-menu-sheet" role="menu" ref={menuSheetRef} onClick={(e) => e.stopPropagation()}>
             {/* View Selection */}
             <div className="menu-section">
               <div className="menu-section-label">View</div>
@@ -346,6 +414,68 @@ export function MobileToolbarMenu({
                 )}
               </div>
             )}
+
+            {/* Settings */}
+            <div className="menu-section">
+              <div className="menu-section-label">Settings</div>
+
+              {/* Version Info */}
+              <div className="menu-item static">
+                <span className="menu-icon">📦</span>
+                <span>Version {version}</span>
+              </div>
+
+              {/* What's New */}
+              <div className="menu-item-updates">
+                <UpdatesButton variant="mobile-menu" />
+              </div>
+
+              {/* Subscribe */}
+              {canShowEmailButton && onSubscribe && (
+                <button
+                  className="menu-item"
+                  onClick={handleSubscribe}
+                  role="menuitem"
+                >
+                  <span className="menu-icon">📧</span>
+                  <span>Subscribe for Updates</span>
+                </button>
+              )}
+
+              {/* Tour */}
+              {onStartTour && (
+                <button
+                  className="menu-item"
+                  onClick={handleStartTour}
+                  role="menuitem"
+                >
+                  <span className="menu-icon">🎯</span>
+                  <span>Take a Tour</span>
+                </button>
+              )}
+
+              {/* Keyboard Shortcuts */}
+              {onShowHelp && (
+                <button
+                  className="menu-item"
+                  onClick={handleShowHelp}
+                  role="menuitem"
+                >
+                  <span className="menu-icon">⌨️</span>
+                  <span>Keyboard Shortcuts</span>
+                </button>
+              )}
+
+              {/* Theme Toggle */}
+              <button
+                className="menu-item"
+                onClick={handleCycleTheme}
+                role="menuitem"
+              >
+                <span className="menu-icon">{getThemeIcon()}</span>
+                <span>Theme: {getThemeLabel()}</span>
+              </button>
+            </div>
 
             {/* Event Info */}
             <div className="menu-footer">

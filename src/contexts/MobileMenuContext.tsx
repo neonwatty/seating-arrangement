@@ -1,0 +1,77 @@
+import { createContext, useContext, useState } from 'react';
+import {
+  shouldShowEmailCapture,
+  markAsSubscribed,
+  trackDismissal,
+} from '../utils/emailCaptureManager';
+
+interface MobileMenuContextValue {
+  onShowHelp: () => void;
+  onStartTour: () => void;
+  onSubscribe: () => void;
+  canShowEmailButton: boolean;
+  showEmailCapture: boolean;
+  setShowEmailCapture: (show: boolean) => void;
+  handleEmailCaptureClose: (subscribed?: boolean) => void;
+}
+
+const MobileMenuContext = createContext<MobileMenuContextValue | null>(null);
+
+interface MobileMenuProviderProps {
+  children: React.ReactNode;
+  onShowHelp: () => void;
+  onStartTour: () => void;
+}
+
+export function MobileMenuProvider({ children, onShowHelp, onStartTour }: MobileMenuProviderProps) {
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
+
+  // Check if user has already subscribed (don't show button if so)
+  const canShowEmailButton = shouldShowEmailCapture('guestMilestone') ||
+                             shouldShowEmailCapture('optimizerSuccess') ||
+                             shouldShowEmailCapture('exportAttempt');
+
+  const handleEmailCaptureClose = (subscribed = false) => {
+    if (subscribed) {
+      markAsSubscribed();
+    } else {
+      trackDismissal();
+    }
+    setShowEmailCapture(false);
+  };
+
+  const onSubscribe = () => {
+    setShowEmailCapture(true);
+  };
+
+  return (
+    <MobileMenuContext.Provider value={{
+      onShowHelp,
+      onStartTour,
+      onSubscribe,
+      canShowEmailButton,
+      showEmailCapture,
+      setShowEmailCapture,
+      handleEmailCaptureClose,
+    }}>
+      {children}
+    </MobileMenuContext.Provider>
+  );
+}
+
+export function useMobileMenu() {
+  const context = useContext(MobileMenuContext);
+  if (!context) {
+    // Return no-op handlers if not in provider (e.g., on landing page)
+    return {
+      onShowHelp: undefined,
+      onStartTour: undefined,
+      onSubscribe: undefined,
+      canShowEmailButton: false,
+      showEmailCapture: false,
+      setShowEmailCapture: () => {},
+      handleEmailCaptureClose: () => {},
+    };
+  }
+  return context;
+}

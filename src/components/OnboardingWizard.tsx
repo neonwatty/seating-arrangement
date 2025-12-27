@@ -29,7 +29,7 @@ interface OnboardingWizardProps {
 export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: OnboardingWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { activeView, setActiveView, sidebarOpen, toggleSidebar } = useStore();
 
@@ -65,7 +65,7 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
   // Track viewport size for mobile detection
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 480);
+      setIsMobile(window.innerWidth <= 600);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -222,6 +222,30 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
 
   const spotlightRect = getSpotlightRect();
 
+  // Calculate arrow position for mobile (points from tooltip to target)
+  const getArrowPosition = () => {
+    if (!targetRect || !isMobile || currentStep.placement === 'center') {
+      return null;
+    }
+
+    // Arrow should point from the top of the tooltip area to the target
+    // Tooltip is at bottom: 24px from bottom of screen
+    const tooltipTop = window.innerHeight - 24 - 200; // Approximate tooltip height
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    const targetBottomY = targetRect.bottom;
+
+    return {
+      // Arrow starts just above the tooltip
+      startX: Math.min(Math.max(targetCenterX, 40), window.innerWidth - 40),
+      startY: tooltipTop - 8,
+      // Arrow points to target center-bottom
+      targetX: targetCenterX,
+      targetY: targetBottomY + 8,
+    };
+  };
+
+  const arrowPosition = getArrowPosition();
+
   return createPortal(
     <div className="onboarding-overlay" onClick={handleSkip}>
       {/* Spotlight mask overlay */}
@@ -265,6 +289,56 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
       {/* Welcome modal (no spotlight) */}
       {!targetRect && currentStep.placement === 'center' && (
         <div className="onboarding-backdrop" />
+      )}
+
+      {/* Mobile: Target highlight box */}
+      {isMobile && targetRect && currentStep.placement !== 'center' && (
+        <div
+          className="onboarding-target-highlight"
+          style={{
+            left: targetRect.left - 4,
+            top: targetRect.top - 4,
+            width: targetRect.width + 8,
+            height: targetRect.height + 8,
+          }}
+        />
+      )}
+
+      {/* Mobile: Arrow pointing to target */}
+      {arrowPosition && (
+        <div className="onboarding-arrow">
+          <svg
+            width={window.innerWidth}
+            height={window.innerHeight}
+            style={{ position: 'fixed', top: 0, left: 0 }}
+          >
+            <defs>
+              <marker
+                id="arrowhead"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon
+                  points="0 0, 10 3.5, 0 7"
+                  fill="var(--color-primary)"
+                />
+              </marker>
+            </defs>
+            <line
+              x1={arrowPosition.startX}
+              y1={arrowPosition.startY}
+              x2={arrowPosition.targetX}
+              y2={arrowPosition.targetY}
+              stroke="var(--color-primary)"
+              strokeWidth="3"
+              markerEnd="url(#arrowhead)"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
       )}
 
       {/* Tooltip */}

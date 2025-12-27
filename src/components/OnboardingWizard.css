@@ -198,10 +198,22 @@
   }
 }
 
+/* Mobile Arrow Pointer - Hidden by default, shown on mobile */
+.onboarding-arrow {
+  display: none;
+  position: fixed;
+  z-index: 10002;
+  pointer-events: none;
+}
+
+.onboarding-arrow svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
 /* Mobile Responsive */
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .onboarding-tooltip {
-    /* On mobile, center the tooltip and make it full-width for all steps */
+    /* On mobile, make tooltip full-width at bottom */
     width: calc(100vw - 32px);
     max-width: none;
     left: 16px !important;
@@ -257,7 +269,7 @@
     flex: 0 0 auto;
   }
 
-  /* On mobile, hide spotlight ring and show full backdrop */
+  /* On mobile, hide spotlight ring but keep lighter backdrop */
   .onboarding-spotlight-ring {
     display: none;
   }
@@ -266,6 +278,7 @@
     display: none;
   }
 
+  /* Show lighter backdrop so target is more visible */
   .onboarding-overlay::before {
     content: '';
     position: absolute;
@@ -273,7 +286,38 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  /* Show arrow on mobile */
+  .onboarding-arrow {
+    display: block;
+  }
+
+  /* Highlight the target element on mobile with a subtle glow */
+  .onboarding-target-highlight {
+    position: fixed;
+    border: 2px solid var(--color-primary);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 10000;
+    box-shadow:
+      0 0 0 4px rgba(var(--color-primary-rgb, 231, 111, 81), 0.2),
+      inset 0 0 0 1000px rgba(255, 255, 255, 0.1);
+    animation: mobileHighlightPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes mobileHighlightPulse {
+    0%, 100% {
+      box-shadow:
+        0 0 0 4px rgba(var(--color-primary-rgb, 231, 111, 81), 0.2),
+        inset 0 0 0 1000px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+      box-shadow:
+        0 0 0 8px rgba(var(--color-primary-rgb, 231, 111, 81), 0.1),
+        inset 0 0 0 1000px rgba(255, 255, 255, 0.15);
+    }
   }
 }
 

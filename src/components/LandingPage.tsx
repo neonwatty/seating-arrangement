@@ -4,12 +4,19 @@ import './LandingPage.css';
 import { version } from '../../package.json';
 import { UpdatesButton } from './UpdatesPopup';
 import { EmailCaptureModal } from './EmailCaptureModal';
+import { MobileSettingsHeader } from './MobileSettingsHeader';
 import { trackCTAClick, trackAppEntry } from '../utils/analytics';
 import { captureUtmParams } from '../utils/utm';
+import { shouldShowEmailCapture } from '../utils/emailCaptureManager';
 
 export function LandingPage() {
   const navigate = useNavigate();
   const [showEmailCapture, setShowEmailCapture] = useState(false);
+
+  // Check if user has already subscribed (don't show button if so)
+  const canShowEmailButton = shouldShowEmailCapture('guestMilestone') ||
+                             shouldShowEmailCapture('optimizerSuccess') ||
+                             shouldShowEmailCapture('exportAttempt');
 
   // Capture UTM parameters on landing page load
   useEffect(() => {
@@ -23,6 +30,14 @@ export function LandingPage() {
   };
   return (
     <div className="landing-page">
+      {/* Mobile Settings Header - only visible on mobile */}
+      <div className="mobile-settings-container">
+        <MobileSettingsHeader
+          onSubscribe={() => setShowEmailCapture(true)}
+          canShowEmailButton={canShowEmailButton}
+        />
+      </div>
+
       {/* Floating Decorative Shapes - Matching actual app visuals */}
       <div className="floating-shapes" aria-hidden="true">
         {/* Round Table with Seated Guests - Top Right (matches app's round table) */}

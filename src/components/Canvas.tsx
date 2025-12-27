@@ -11,6 +11,7 @@ import type { DragEndEvent, DragStartEvent, DragMoveEvent } from '@dnd-kit/core'
 import { useGesture } from '@use-gesture/react';
 import { useStore } from '../store/useStore';
 import { useLongPress } from '../hooks/useLongPress';
+import { useMobileMenu } from '../contexts/MobileMenuContext';
 import { TableComponent } from './Table';
 import { GuestChip } from './GuestChip';
 import { CanvasGuest } from './CanvasGuest';
@@ -373,6 +374,9 @@ export function Canvas() {
     newlyAddedTableId,
     clearNewlyAddedTable,
   } = useStore();
+
+  // Mobile menu context for settings
+  const { onShowHelp, onStartTour, onSubscribe, canShowEmailButton } = useMobileMenu();
 
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
@@ -1087,6 +1091,10 @@ export function Canvas() {
         showRelationships={showRelationships}
         onToggleRelationships={() => setShowRelationships(!showRelationships)}
         onImport={() => setShowImportWizard(true)}
+        onShowHelp={onShowHelp}
+        onStartTour={onStartTour}
+        onSubscribe={onSubscribe}
+        canShowEmailButton={canShowEmailButton}
       >
         {/* Grid controls */}
         <GridControls />

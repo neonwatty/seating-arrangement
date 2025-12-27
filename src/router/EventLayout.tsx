@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { Header } from '../components/Header';
 import { GuestForm } from '../components/GuestForm';
 import { OnboardingWizard } from '../components/OnboardingWizard';
+import { EmailCaptureModal } from '../components/EmailCaptureModal';
 import { showToast } from '../components/toastStore';
+import { MobileMenuProvider, useMobileMenu } from '../contexts/MobileMenuContext';
 
 /**
  * Layout wrapper for event-related routes.
@@ -96,6 +99,50 @@ export function EventLayout() {
   const handleLogoClick = () => {
     navigate('/');
   };
+
+  return (
+    <MobileMenuProvider
+      onShowHelp={() => setShowShortcutsHelp(true)}
+      onStartTour={() => setShowOnboarding(true)}
+    >
+      <EventLayoutContent
+        handleLogoClick={handleLogoClick}
+        setShowShortcutsHelp={setShowShortcutsHelp}
+        setShowOnboarding={setShowOnboarding}
+        showShortcutsHelp={showShortcutsHelp}
+        showOnboarding={showOnboarding}
+        editingGuestId={editingGuestId}
+        setEditingGuest={setEditingGuest}
+        hasCompletedOnboarding={hasCompletedOnboarding}
+        setOnboardingComplete={setOnboardingComplete}
+      />
+    </MobileMenuProvider>
+  );
+}
+
+// Inner component to use the context
+function EventLayoutContent({
+  handleLogoClick,
+  setShowShortcutsHelp,
+  setShowOnboarding,
+  showShortcutsHelp,
+  showOnboarding,
+  editingGuestId,
+  setEditingGuest,
+  hasCompletedOnboarding,
+  setOnboardingComplete,
+}: {
+  handleLogoClick: () => void;
+  setShowShortcutsHelp: (show: boolean) => void;
+  setShowOnboarding: (show: boolean) => void;
+  showShortcutsHelp: boolean;
+  showOnboarding: boolean;
+  editingGuestId: string | null;
+  setEditingGuest: (id: string | null) => void;
+  hasCompletedOnboarding: boolean;
+  setOnboardingComplete: () => void;
+}) {
+  const { showEmailCapture, handleEmailCaptureClose } = useMobileMenu();
 
   return (
     <div className="app">
@@ -201,6 +248,16 @@ export function EventLayout() {
           showToast('Tour complete! Press ? anytime for help.', 'success');
         }}
       />
+
+      {/* Email Capture Modal (triggered from mobile menu) */}
+      {showEmailCapture && createPortal(
+        <EmailCaptureModal
+          onClose={() => handleEmailCaptureClose(false)}
+          onSuccess={() => handleEmailCaptureClose(true)}
+          source="value_moment"
+        />,
+        document.body
+      )}
     </div>
   );
 }

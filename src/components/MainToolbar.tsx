@@ -14,9 +14,14 @@ interface MainToolbarProps {
   onImport?: () => void;
   showRelationships?: boolean;
   onToggleRelationships?: () => void;
+  // Mobile settings props
+  onShowHelp?: () => void;
+  onStartTour?: () => void;
+  onSubscribe?: () => void;
+  canShowEmailButton?: boolean;
 }
 
-export function MainToolbar({ children, onAddGuest, onImport, showRelationships, onToggleRelationships }: MainToolbarProps) {
+export function MainToolbar({ children, onAddGuest, onImport, showRelationships, onToggleRelationships, onShowHelp, onStartTour, onSubscribe, canShowEmailButton }: MainToolbarProps) {
   const { event, addTable, addGuest, activeView, optimizeSeating, resetSeating, hasOptimizationSnapshot } = useStore();
   const isMobile = useIsMobile();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
@@ -105,6 +110,10 @@ export function MainToolbar({ children, onAddGuest, onImport, showRelationships,
           onImport={onImport}
           showRelationships={showRelationships}
           onToggleRelationships={onToggleRelationships}
+          onShowHelp={onShowHelp}
+          onStartTour={onStartTour}
+          onSubscribe={onSubscribe}
+          canShowEmailButton={canShowEmailButton}
         />
         {/* Middle section for view-specific controls (like GridControls) */}
         <div className="toolbar-section toolbar-middle mobile-middle">

@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../store/useStore';
+import { useMobileMenu } from '../contexts/MobileMenuContext';
 import { GuestForm } from './GuestForm';
 import { RelationshipMatrix } from './RelationshipMatrix';
 import { MainToolbar } from './MainToolbar';
@@ -20,6 +21,9 @@ export function GuestManagementView() {
     updateGuest,
     assignGuestToTable,
   } = useStore();
+
+  // Mobile menu context for settings
+  const { onShowHelp, onStartTour, onSubscribe, canShowEmailButton } = useMobileMenu();
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchQuery, setSearchQuery] = useState('');
@@ -160,6 +164,10 @@ export function GuestManagementView() {
         onImport={() => setShowImportWizard(true)}
         showRelationships={viewMode === 'relationships'}
         onToggleRelationships={() => setViewMode(viewMode === 'relationships' ? 'list' : 'relationships')}
+        onShowHelp={onShowHelp}
+        onStartTour={onStartTour}
+        onSubscribe={onSubscribe}
+        canShowEmailButton={canShowEmailButton}
       >
         {/* Search and filters */}
         <input

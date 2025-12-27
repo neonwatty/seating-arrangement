@@ -1,0 +1,215 @@
+/* Mobile Settings Header - Only visible on mobile */
+
+.mobile-settings-header {
+  display: none;
+}
+
+/* Show only on mobile */
+@media (max-width: 768px) {
+  .mobile-settings-header {
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Settings Button (hamburger style) */
+.mobile-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-settings-btn:hover,
+.mobile-settings-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.mobile-settings-btn:hover .hamburger-line,
+.mobile-settings-btn.active .hamburger-line {
+  background: white;
+}
+
+.mobile-settings-btn .hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 20px;
+}
+
+.mobile-settings-btn .hamburger-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--color-text);
+  border-radius: 1px;
+  transition: all 0.15s ease;
+}
+
+/* Animated hamburger to X */
+.mobile-settings-btn.active .hamburger-line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.mobile-settings-btn.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile-settings-btn.active .hamburger-line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Backdrop */
+.mobile-settings-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 998;
+  animation: settingsFadeIn 0.2s ease-out;
+}
+
+@keyframes settingsFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Settings Sheet */
+.mobile-settings-sheet {
+  position: fixed;
+  top: 60px;
+  right: 12px;
+  width: min(300px, calc(100vw - 24px));
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-xl);
+  z-index: 999;
+  animation: settingsSlideDown 0.2s ease-out forwards;
+  overflow: hidden;
+}
+
+@keyframes settingsSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reuse menu item styles from MobileToolbarMenu */
+.mobile-settings-sheet .menu-section {
+  padding: 12px 0;
+}
+
+.mobile-settings-sheet .menu-section-label {
+  padding: 0 16px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+}
+
+.mobile-settings-sheet .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  min-height: 48px;
+}
+
+.mobile-settings-sheet .menu-item:hover {
+  background: var(--color-bg-hover);
+}
+
+.mobile-settings-sheet .menu-item.static {
+  cursor: default;
+  color: var(--color-text-secondary);
+}
+
+.mobile-settings-sheet .menu-item.static:hover {
+  background: transparent;
+}
+
+.mobile-settings-sheet .menu-icon {
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Updates button wrapper */
+.mobile-settings-sheet .menu-item-updates {
+  padding: 0;
+}
+
+/* Style UpdatesButton mobile-menu variant to match menu items */
+.mobile-settings-sheet .menu-item-updates .mobile-header-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  min-height: 48px;
+}
+
+.mobile-settings-sheet .menu-item-updates .mobile-header-menu-item:hover {
+  background: var(--color-bg-hover);
+}
+
+.mobile-settings-sheet .menu-item-updates .mobile-header-menu-icon {
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .mobile-settings-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .mobile-settings-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}

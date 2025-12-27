@@ -540,13 +540,23 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .header {
     padding: 0.5rem 0.75rem;
   }
 
   .logo {
     font-size: var(--font-size-base);
+  }
+
+  /* Hide these buttons on mobile - they're in the hamburger menu */
+  .version-badge,
+  .updates-btn--header,
+  .subscribe-btn,
+  .tour-btn,
+  .help-btn,
+  .theme-btn {
+    display: none;
   }
 
   .event-info {
