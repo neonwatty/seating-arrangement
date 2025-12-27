@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import type { Guest, Table, Constraint, Event, CanvasState, TableShape, SurveyQuestion, SurveyResponse, CanvasPreferences, AlignmentGuide, ConstraintViolation, VenueElement, VenueElementType } from '../types';
 import { demoTables, demoGuests, demoConstraints, demoSurveyQuestions, demoEventMetadata } from '../data/demoData';
+import { trackEventCreated, trackTableAdded, trackGuestAdded, trackOptimizerRun, trackGuestsImported } from '../utils/analytics';
 
 // Helper function to detect constraint violations
 function detectConstraintViolations(event: Event): ConstraintViolation[] {
@@ -684,6 +685,8 @@ export const useStore = create<AppState>()(
           history: [],
           historyIndex: -1,
         });
+        // Track event creation
+        trackEventCreated(newEvent.eventType || 'other');
         return newEvent.id;
       },
 
@@ -818,6 +821,8 @@ export const useStore = create<AppState>()(
           })),
           newlyAddedTableId: newId,
         }));
+        // Track table addition
+        trackTableAdded(shape);
       },
 
       addTables: (tableDefs) => {
@@ -1020,6 +1025,8 @@ export const useStore = create<AppState>()(
           },
           newlyAddedGuestId: newId,
         }));
+        // Track guest addition
+        trackGuestAdded(get().event.guests.length);
         return newId;
       },
 
@@ -1150,7 +1157,7 @@ export const useStore = create<AppState>()(
           ),
         }))),
 
-      importGuests: (guests) =>
+      importGuests: (guests) => {
         set((state) => syncEventUpdate(state, (event) => ({
           ...event,
           guests: [
@@ -1164,7 +1171,10 @@ export const useStore = create<AppState>()(
               ...g,
             })),
           ],
-        }))),
+        })));
+        // Track guest import
+        trackGuestsImported(guests.length);
+      },
 
       // Constraint actions
       addConstraint: (constraint) =>
@@ -2021,6 +2031,9 @@ export const useStore = create<AppState>()(
         }));
 
         const afterScore = get().calculateSeatingScore();
+
+        // Track optimizer usage
+        trackOptimizerRun(guests.length, tables.length);
 
         console.log('Optimization complete:', { beforeScore, afterScore, movedGuests, tableAssignments: Object.fromEntries(tableAssignments) });
         return { beforeScore, afterScore, movedGuests };
