@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import type { Guest, Table, Constraint } from '../types';
 import { getFullName } from '../types';
 import { EmailCaptureModal } from './EmailCaptureModal';
+import { trackOptimizerRun, trackFunnelStep, trackMilestone } from '../utils/analytics';
 import {
   shouldShowEmailCapture,
   markTriggerShown,
@@ -42,6 +43,11 @@ export function OptimizeView() {
   const runOptimization = async () => {
     setIsOptimizing(true);
     setResult(null);
+
+    // Track optimizer usage
+    trackOptimizerRun(confirmedGuests, event.tables.length);
+    trackFunnelStep('optimizer_used', { guest_count: confirmedGuests, table_count: event.tables.length });
+    trackMilestone('first_optimization');
 
     // Simulate async work
     await new Promise(resolve => setTimeout(resolve, 500));

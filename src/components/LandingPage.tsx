@@ -5,7 +5,7 @@ import { version } from '../../package.json';
 import { UpdatesButton } from './UpdatesPopup';
 import { EmailCaptureModal } from './EmailCaptureModal';
 import { MobileSettingsHeader } from './MobileSettingsHeader';
-import { trackCTAClick, trackAppEntry } from '../utils/analytics';
+import { trackCTAClick, trackAppEntry, trackFunnelStep } from '../utils/analytics';
 import { captureUtmParams } from '../utils/utm';
 import { shouldShowEmailCapture } from '../utils/emailCaptureManager';
 
@@ -18,14 +18,17 @@ export function LandingPage() {
                              shouldShowEmailCapture('optimizerSuccess') ||
                              shouldShowEmailCapture('exportAttempt');
 
-  // Capture UTM parameters on landing page load
+  // Capture UTM parameters and track landing view on page load
   useEffect(() => {
     captureUtmParams();
+    trackFunnelStep('landing_view');
   }, []);
 
   const handleEnterApp = () => {
     trackCTAClick('hero');
     trackAppEntry();
+    trackFunnelStep('cta_click');
+    trackFunnelStep('app_entry');
     navigate('/events');
   };
   return (

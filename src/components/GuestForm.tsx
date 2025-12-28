@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { DIETARY_OPTIONS, ACCESSIBILITY_OPTIONS } from '../constants/dietaryIcons';
 import type { Guest, RelationshipType } from '../types';
 import { getFullName } from '../types';
+import { trackGuestAdded, trackFunnelStep, trackMilestone } from '../utils/analytics';
 import './GuestForm.css';
 
 interface GuestFormProps {
@@ -97,6 +98,13 @@ export function GuestForm({ guestId, onClose }: GuestFormProps) {
       onClose();
     } else {
       addGuest(guestData);
+      const newGuestCount = event.guests.length + 1;
+      trackGuestAdded(newGuestCount);
+      // Track first guest milestone
+      if (newGuestCount === 1) {
+        trackFunnelStep('first_guest');
+        trackMilestone('first_guest');
+      }
 
       if (addAnother) {
         // Reset form for next guest, keep group for convenience

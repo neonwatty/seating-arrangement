@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import type { Guest, Table, Constraint, Event, CanvasState, TableShape, SurveyQuestion, SurveyResponse, CanvasPreferences, AlignmentGuide, ConstraintViolation, VenueElement, VenueElementType } from '../types';
 import { demoTables, demoGuests, demoConstraints, demoSurveyQuestions, demoEventMetadata } from '../data/demoData';
-import { trackEventCreated, trackTableAdded, trackGuestAdded, trackOptimizerRun, trackGuestsImported } from '../utils/analytics';
+import { trackEventCreated, trackTableAdded, trackGuestAdded, trackOptimizerRun, trackGuestsImported, trackFunnelStep, trackMilestone } from '../utils/analytics';
 
 // Helper function to detect constraint violations
 function detectConstraintViolations(event: Event): ConstraintViolation[] {
@@ -823,6 +823,11 @@ export const useStore = create<AppState>()(
         }));
         // Track table addition
         trackTableAdded(shape);
+        // Track first table milestone
+        if (get().event.tables.length === 1) {
+          trackFunnelStep('first_table');
+          trackMilestone('first_table');
+        }
       },
 
       addTables: (tableDefs) => {

@@ -21,6 +21,7 @@ import {
   trackDismissal,
 } from '../utils/emailCaptureManager';
 import { showToast } from './toastStore';
+import { trackPDFExported, trackFunnelStep, trackMilestone } from '../utils/analytics';
 import './DashboardView.css';
 
 export function DashboardView() {
@@ -185,6 +186,7 @@ export function DashboardView() {
   };
 
   const handleDownloadFromPreview = (placeOptions?: PlaceCardOptions, tableOptions?: TableCardOptions) => {
+    const exportType = previewType === 'table' ? 'table_cards' : 'place_cards';
     if (previewType === 'table') {
       // Use passed options or stored options
       handleDownloadTableCardsWithOptions(tableOptions ?? currentTableOptions);
@@ -192,6 +194,10 @@ export function DashboardView() {
       // Use passed options or stored options
       handleDownloadPlaceCardsWithOptions(placeOptions ?? currentPlaceOptions);
     }
+    // Track export
+    trackPDFExported(exportType);
+    trackFunnelStep('export_completed', { export_type: exportType });
+    trackMilestone('first_export', { export_type: exportType });
     handleClosePreview();
     triggerEmailCaptureOnExport();
   };

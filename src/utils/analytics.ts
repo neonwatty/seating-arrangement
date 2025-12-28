@@ -145,6 +145,135 @@ export function trackShareAction(shareType: 'link' | 'qr' | 'clipboard'): void {
 }
 
 // ============================================
+// Funnel & Journey Tracking
+// ============================================
+
+/**
+ * Funnel stages for tracking user journey
+ */
+export type FunnelStage =
+  | 'landing_view'      // User views landing page
+  | 'cta_click'         // User clicks CTA
+  | 'app_entry'         // User enters app
+  | 'event_created'     // User creates first event
+  | 'first_guest'       // User adds first guest
+  | 'first_table'       // User adds first table
+  | 'optimizer_used'    // User runs optimizer
+  | 'export_completed'; // User exports (PDF/QR/Share)
+
+/**
+ * Track funnel progression
+ * Use this for key conversion funnel steps
+ */
+export function trackFunnelStep(stage: FunnelStage, metadata?: Record<string, unknown>): void {
+  trackEvent('funnel_step', {
+    event_category: 'funnel',
+    funnel_stage: stage,
+    ...metadata,
+  });
+}
+
+/**
+ * Track milestone achievements (first-time actions)
+ */
+export function trackMilestone(
+  milestone: 'first_event' | 'first_guest' | 'first_table' | 'first_optimization' | 'first_export',
+  metadata?: Record<string, unknown>
+): void {
+  trackEvent('milestone_achieved', {
+    event_category: 'milestone',
+    milestone_name: milestone,
+    ...metadata,
+  });
+}
+
+/**
+ * Track feature discovery/usage
+ */
+export function trackFeatureUsed(
+  feature: 'relationships' | 'constraints' | 'venue_elements' | 'import_wizard' | 'qr_codes' | 'theme_toggle' | 'keyboard_shortcuts',
+  firstTime: boolean = false
+): void {
+  trackEvent('feature_used', {
+    event_category: 'feature_discovery',
+    feature_name: feature,
+    is_first_use: firstTime,
+  });
+}
+
+/**
+ * Track view/tab switches within the app
+ */
+export function trackViewSwitch(
+  fromView: 'canvas' | 'dashboard' | 'guests',
+  toView: 'canvas' | 'dashboard' | 'guests'
+): void {
+  trackEvent('view_switch', {
+    event_category: 'navigation',
+    from_view: fromView,
+    to_view: toView,
+  });
+}
+
+/**
+ * Track onboarding progress
+ */
+export function trackOnboardingStep(
+  step: number,
+  totalSteps: number,
+  completed: boolean = false
+): void {
+  trackEvent('onboarding_progress', {
+    event_category: 'onboarding',
+    step_number: step,
+    total_steps: totalSteps,
+    is_completed: completed,
+  });
+}
+
+/**
+ * Track user engagement depth
+ * Call periodically to measure session engagement
+ */
+export function trackEngagementDepth(metrics: {
+  guestCount: number;
+  tableCount: number;
+  constraintCount: number;
+  timeOnPage: number; // seconds
+}): void {
+  trackEvent('engagement_depth', {
+    event_category: 'engagement',
+    guest_count: metrics.guestCount,
+    table_count: metrics.tableCount,
+    constraint_count: metrics.constraintCount,
+    time_on_page_seconds: metrics.timeOnPage,
+  });
+}
+
+/**
+ * Set user properties for segmentation
+ * Call when user state changes significantly
+ */
+export function setUserProperties(properties: {
+  hasCreatedEvent?: boolean;
+  hasAddedGuests?: boolean;
+  hasUsedOptimizer?: boolean;
+  hasExported?: boolean;
+  hasSubscribed?: boolean;
+}): void {
+  if (!isGtagAvailable()) return;
+
+  // GA4 user properties
+  window.gtag('set', 'user_properties', {
+    has_created_event: properties.hasCreatedEvent,
+    has_added_guests: properties.hasAddedGuests,
+    has_used_optimizer: properties.hasUsedOptimizer,
+    has_exported: properties.hasExported,
+    has_subscribed: properties.hasSubscribed,
+  });
+}
+
+// ============================================
 // Core Web Vitals tracking
 // ============================================
 

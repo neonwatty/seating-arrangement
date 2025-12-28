@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
 import { ONBOARDING_STEPS, type OnboardingStep } from '../data/onboardingSteps';
+import { trackOnboardingStep } from '../utils/analytics';
 import './OnboardingWizard.css';
 
 // Helper to perform step actions
@@ -122,9 +123,10 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
   }, [updateTargetRect, isOpen, currentStepIndex]);
 
   const handleComplete = useCallback(() => {
+    trackOnboardingStep(steps.length, steps.length, true);
     onComplete();
     onClose();
-  }, [onComplete, onClose]);
+  }, [onComplete, onClose, steps.length]);
 
   const handleSkip = useCallback(() => {
     onClose();
@@ -145,6 +147,7 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
           if (stepProps.action) {
             performStepAction(stepProps.action, setActiveView);
           }
+          trackOnboardingStep(currentStepIndex + 2, steps.length);
           setCurrentStepIndex((i) => i + 1);
         }
       } else if (e.key === 'ArrowLeft' && !isFirstStep) {
@@ -387,6 +390,7 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
                   if (stepProps.action) {
                     performStepAction(stepProps.action, setActiveView);
                   }
+                  trackOnboardingStep(currentStepIndex + 2, steps.length);
                   setCurrentStepIndex((i) => i + 1);
                 }
               }}

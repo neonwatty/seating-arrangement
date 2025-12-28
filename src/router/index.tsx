@@ -39,7 +39,7 @@ function CanvasView() {
   );
 }
 
-// Track page views on route changes and update document title
+// Track page views on route changes and update document title and meta description
 function PageViewTracker() {
   const location = useLocation();
 
@@ -56,7 +56,34 @@ function PageViewTracker() {
       return 'Seatify';
     };
 
+    // Map routes to SEO-optimized meta descriptions
+    const getPageDescription = (pathname: string): string => {
+      if (pathname === '/') {
+        return 'Free seating chart maker for weddings and events. AI-powered seating plan generator with drag-and-drop. Create wedding seating arrangements in minutes. No signup required.';
+      }
+      if (pathname === '/events') {
+        return 'Manage your seating charts for weddings, corporate events, and parties. Create and organize multiple events with Seatify.';
+      }
+      if (pathname.includes('/dashboard')) {
+        return 'View event statistics, export place cards and table cards, and manage your seating arrangement with Seatify.';
+      }
+      if (pathname.includes('/canvas')) {
+        return 'Design your seating layout with drag-and-drop. Add tables, assign guests, and visualize your event floor plan.';
+      }
+      if (pathname.includes('/guests')) {
+        return 'Add and manage your guest list. Track RSVPs, dietary restrictions, and guest relationships for smart seating.';
+      }
+      if (pathname.includes('/table/')) {
+        return 'View table assignment details and guest seating information for your event.';
+      }
+      if (pathname.includes('/share')) {
+        return 'View shared seating chart. See table assignments and guest placements for your event.';
+      }
+      return 'Free seating chart maker for weddings and events. Create beautiful seating arrangements with Seatify.';
+    };
+
     const pageTitle = getPageTitle(location.pathname);
+    const pageDescription = getPageDescription(location.pathname);
 
     // Update document title for better SEO and UX
     // Landing page gets the full title, others get "Page | Seatify" format
@@ -64,6 +91,12 @@ function PageViewTracker() {
       document.title = 'Free Seating Chart Maker | Wedding Seating Plan Generator - Seatify';
     } else {
       document.title = `${pageTitle} | Seatify`;
+    }
+
+    // Update meta description for SEO
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', pageDescription);
     }
 
     trackPageView(location.pathname, pageTitle);

@@ -26,6 +26,14 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'dnd-kit': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           'pdf-export': ['jspdf', 'html2canvas'],
+          // QR code generation - used in dashboard
+          'qrcode': ['react-qr-code'],
+          // Gesture library for canvas interactions
+          'gesture': ['@use-gesture/react'],
+          // Import wizard dependencies (xlsx is heavy - ~400KB)
+          'excel-import': ['xlsx', 'papaparse'],
+          // Compression for share links
+          'compression': ['pako'],
         },
       },
     },
