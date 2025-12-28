@@ -34,7 +34,6 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
   const [isNavigating, setIsNavigating] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const pendingStepRef = useRef<number | null>(null);
   const navigate = useNavigate();
   const { activeView, setActiveView, sidebarOpen, toggleSidebar, currentEventId } = useStore();
 
@@ -187,7 +186,7 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isLastStep, isFirstStep, handleComplete, handleSkip, stepProps.action, setActiveView]);
+  }, [isOpen, isLastStep, isFirstStep, handleComplete, handleSkip, stepProps.action, setActiveView, currentStepIndex, steps.length]);
 
   if (!isOpen) return null;
 
