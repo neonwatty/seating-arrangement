@@ -13,6 +13,8 @@ test.beforeEach(async ({}, testInfo) => {
 });
 
 // Helper to enter the app from landing page on mobile
+// Note: Canvas view now uses immersive mode without hamburger menu
+// So we navigate to guests view where hamburger menu is available
 async function enterAppMobile(page: import('@playwright/test').Page) {
   // Set mobile viewport before any navigation
   await page.setViewportSize(MOBILE_VIEWPORT);
@@ -23,6 +25,7 @@ async function enterAppMobile(page: import('@playwright/test').Page) {
     const data = stored ? JSON.parse(stored) : { state: {}, version: 11 };
     data.state = data.state || {};
     data.state.hasCompletedOnboarding = true;
+    data.state.hasSeenImmersiveHint = true; // Skip immersive hint
     data.version = 11;
     localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
   });
@@ -37,9 +40,16 @@ async function enterAppMobile(page: import('@playwright/test').Page) {
   if (await eventCard.isVisible({ timeout: 3000 }).catch(() => false)) {
     await eventCard.click();
     await expect(page.locator('.canvas')).toBeVisible({ timeout: 5000 });
+
+    // Navigate to guests view where hamburger menu is available
+    // Canvas view uses immersive mode without the hamburger menu
+    const currentUrl = page.url();
+    const guestsUrl = currentUrl.replace('/canvas', '/guests');
+    await page.goto(guestsUrl);
+    await page.waitForTimeout(300);
   }
 
-  // Wait for the mobile toolbar to appear
+  // Wait for the mobile toolbar (hamburger button) to appear
   await expect(page.locator('.hamburger-btn')).toBeVisible({ timeout: 5000 });
 }
 
@@ -163,8 +173,9 @@ test.describe('Mobile Toolbar Menu - View Switching', () => {
     await expect(page.locator('.mobile-menu-sheet')).toBeVisible();
     await page.waitForTimeout(300);
 
-    // Canvas button should be active (default view)
-    await expect(page.locator('.menu-view-btn:has-text("Canvas")')).toHaveClass(/active/);
+    // Guest List button should be active (we're on guests view)
+    // Note: Canvas view uses immersive mode without hamburger menu
+    await expect(page.locator('.menu-view-btn:has-text("Guest List")')).toHaveClass(/active/);
   });
 });
 
@@ -177,8 +188,10 @@ test.describe('Mobile Toolbar Menu - Actions', () => {
     await page.waitForTimeout(300);
 
     // Check that action buttons exist in the DOM
+    // On guests view, Add Guest should be available
     await expect(page.locator('.menu-item:has-text("Add Guest")')).toBeAttached();
-    await expect(page.locator('.menu-item:has-text("Add Table")')).toBeAttached();
+    // Note: Add Table is canvas-specific and not available on guests view
+    // Canvas uses immersive mode with BottomControlSheet instead of hamburger menu
   });
 
   test('menu contains import option', async ({ page }) => {
@@ -194,7 +207,15 @@ test.describe('Mobile Toolbar Menu - Actions', () => {
 });
 
 test.describe('Mobile Toolbar Menu - Canvas Tools', () => {
-  test('relationships toggle is available in menu', async ({ page }) => {
+  // Note: Canvas view now uses immersive mode with BottomControlSheet
+  // Canvas-specific tools like "Show Relationships" are in the BottomControlSheet, not hamburger menu
+  // The hamburger menu is only available on guests view, which doesn't have canvas tools
+
+  test.skip('relationships toggle is available in menu', async ({ page }) => {
+    // This test is skipped because:
+    // - Canvas view uses immersive mode (no hamburger menu)
+    // - Guests view has hamburger menu but not canvas tools
+    // Canvas tools are now accessed via BottomControlSheet in immersive mode
     await enterAppMobile(page);
 
     await page.locator('.hamburger-btn').click();
