@@ -1,0 +1,300 @@
+/* Mobile Canvas Toolbar - Minimal top bar for canvas view */
+
+.mobile-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+  z-index: 100;
+}
+
+/* Back button */
+.mobile-canvas-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.mobile-canvas-back:hover {
+  background: var(--color-bg-hover);
+}
+
+.mobile-canvas-back:active {
+  background: var(--color-bg-secondary);
+}
+
+/* Title section */
+.mobile-canvas-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.mobile-canvas-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  max-width: 100%;
+  transition: all 0.15s ease;
+}
+
+.mobile-canvas-name:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border);
+}
+
+.mobile-canvas-name .edit-icon {
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.mobile-canvas-name:hover .edit-icon {
+  opacity: 0.7;
+}
+
+.mobile-canvas-name-input {
+  width: 100%;
+  max-width: 200px;
+  padding: 6px 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--color-bg);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  outline: none;
+}
+
+/* Controls slot (for GridControls) */
+.mobile-canvas-controls {
+  display: flex;
+  align-items: center;
+}
+
+/* Settings button */
+.mobile-canvas-settings-container {
+  position: relative;
+}
+
+.mobile-canvas-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.mobile-canvas-settings:hover,
+.mobile-canvas-settings.active {
+  background: var(--color-bg-hover);
+}
+
+.mobile-canvas-settings.active {
+  color: var(--color-primary);
+}
+
+/* Settings dropdown sheet */
+.mobile-canvas-settings-sheet {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 200;
+  animation: slideDown 0.15s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-section {
+  padding: 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  padding: 0 8px 6px;
+}
+
+/* Zoom controls */
+.settings-zoom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px;
+}
+
+.zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.zoom-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.zoom-btn:active {
+  transform: scale(0.95);
+}
+
+.zoom-btn.reset {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+.zoom-btn.reset:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-primary);
+}
+
+.zoom-value {
+  min-width: 48px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Settings items */
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.settings-item:hover {
+  background: var(--color-bg-hover);
+}
+
+.settings-item.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.settings-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.settings-item .checkmark {
+  margin-left: auto;
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+/* Guest list button */
+.settings-item.guests-btn {
+  background: var(--color-primary-light);
+}
+
+.settings-item.guests-btn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.settings-item.guests-btn:hover .guest-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.guest-count {
+  margin-left: auto;
+  padding: 2px 8px;
+  background: var(--color-bg);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .mobile-canvas-settings-sheet {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .mobile-canvas-settings-sheet {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+}

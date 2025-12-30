@@ -10,6 +10,7 @@ import { showToast } from '../components/toastStore';
 import { MobileMenuProvider, useMobileMenu } from '../contexts/MobileMenuContext';
 import { TOUR_REGISTRY, type TourId } from '../data/tourRegistry';
 import { QUICK_START_STEPS } from '../data/onboardingSteps';
+import { useIsMobile } from '../hooks/useResponsive';
 
 /**
  * Layout wrapper for event-related routes.
@@ -178,6 +179,7 @@ export function EventLayout() {
         setActiveTour={setActiveTour}
         markTourComplete={markTourComplete}
         startTour={startTour}
+        location={location}
       />
     </MobileMenuProvider>
   );
@@ -199,6 +201,7 @@ function EventLayoutContent({
   setActiveTour,
   markTourComplete,
   startTour,
+  location,
 }: {
   handleLogoClick: () => void;
   setShowShortcutsHelp: (show: boolean) => void;
@@ -214,16 +217,26 @@ function EventLayoutContent({
   setActiveTour: (tourId: TourId | null) => void;
   markTourComplete: (tourId: TourId) => void;
   startTour: (tourId: TourId) => void;
+  location: { pathname: string };
 }) {
   const { showEmailCapture, handleEmailCaptureClose } = useMobileMenu();
+  const isMobile = useIsMobile();
+
+  // Hide header on mobile canvas view (immersive mode)
+  // BUT keep it visible during tours so tour targets are accessible
+  const isCanvasView = location.pathname.endsWith('/canvas');
+  const isTourActive = showOnboarding && activeTourId !== null;
+  const shouldHideHeader = isMobile && isCanvasView && !isTourActive;
 
   return (
     <div className="app">
-      <Header
-        onLogoClick={handleLogoClick}
-        onShowHelp={() => setShowShortcutsHelp(true)}
-        onStartTour={startTour}
-      />
+      {!shouldHideHeader && (
+        <Header
+          onLogoClick={handleLogoClick}
+          onShowHelp={() => setShowShortcutsHelp(true)}
+          onStartTour={startTour}
+        />
+      )}
       <div className="main-content view-visible">
         <Outlet />
       </div>

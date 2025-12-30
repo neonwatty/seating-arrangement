@@ -8,23 +8,56 @@
 .mockup-nav {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
   background: var(--color-bg);
   border-bottom: 2px solid var(--color-primary);
   flex-shrink: 0;
 }
 
 .mockup-nav h2 {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   color: var(--color-primary);
   white-space: nowrap;
 }
 
+/* Mobile: Show dropdown, hide tabs */
+.mockup-select {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
 .mockup-tabs {
-  display: flex;
+  display: none;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* Desktop: Show tabs, hide dropdown */
+@media (min-width: 768px) {
+  .mockup-nav {
+    gap: 1.5rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .mockup-nav h2 {
+    font-size: var(--font-size-lg);
+  }
+
+  .mockup-select {
+    display: none;
+  }
+
+  .mockup-tabs {
+    display: flex;
+  }
 }
 
 .mockup-tab {
@@ -53,5 +86,5 @@
 
 .mockup-content {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
 }

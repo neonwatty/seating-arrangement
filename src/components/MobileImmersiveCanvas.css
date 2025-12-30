@@ -1,0 +1,415 @@
+.mobile-immersive-canvas {
+  position: relative;
+  width: 100%;
+  /* Use flex: 1 instead of height: 100% to work with flex parent */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Allow flex shrinking */
+}
+
+/* Corner Indicator */
+.corner-indicator {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+  left: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 100;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.indicator-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0.6;
+  animation: pulseDot 2s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(249, 112, 102, 0.4);
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
+}
+
+/* Edge Hints */
+.mobile-immersive-canvas .edge-hint {
+  position: fixed;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.mobile-immersive-canvas .edge-hint.top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(to right, transparent, var(--color-primary), transparent);
+  border-radius: 0 0 4px 4px;
+  opacity: 0.4;
+  animation: pulseHint 2s ease-in-out infinite;
+}
+
+.mobile-immersive-canvas .edge-hint.bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(to right, transparent, var(--color-primary), transparent);
+  border-radius: 4px 4px 0 0;
+  opacity: 0.4;
+  animation: pulseHint 2s ease-in-out infinite 0.5s;
+}
+
+@keyframes pulseHint {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+/* First-time Hint */
+.immersive-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  animation: hintFadeIn 0.3s ease-out;
+}
+
+.hint-content {
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 16px 24px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.hint-content p {
+  margin: 4px 0;
+  font-size: var(--font-size-sm);
+}
+
+.hint-content strong {
+  font-size: var(--font-size-base);
+}
+
+@keyframes hintFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Transient Top Bar */
+.transient-top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  padding-top: calc(env(safe-area-inset-top, 12px) + 12px);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-light);
+  transform: translateY(-100%);
+  /* iOS-like spring animation */
+  transition: transform 0.35s var(--ease-ios-sheet);
+  z-index: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  will-change: transform;
+  touch-action: pan-x;
+  cursor: grab;
+}
+
+.transient-top-bar:active {
+  cursor: grabbing;
+}
+
+.transient-top-bar.visible {
+  transform: translateY(calc(0px + var(--drag-offset, 0px)));
+}
+
+/* Disable transitions during drag for immediate response */
+.transient-top-bar.dragging {
+  transition: none !important;
+}
+
+.transient-top-bar .back-btn,
+.transient-top-bar .menu-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transient-top-bar .event-name {
+  flex: 1;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  padding: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transient-top-bar .event-name-input {
+  flex: 1;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  outline: none;
+}
+
+/* Bottom Control Sheet */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 400;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.bottom-control-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-bg);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 450;
+  /* Height controlled by JS via CSS variable for detents */
+  height: var(--sheet-height, 50vh);
+  max-height: 90vh;
+  /* iOS-like spring animation for snap transitions */
+  transition:
+    height 0.35s var(--ease-ios-sheet),
+    transform 0.35s var(--ease-ios-sheet);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  will-change: height, transform;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Initial slide-up animation */
+.bottom-control-sheet--entering {
+  animation: sheetSlideUp 0.35s var(--ease-ios-sheet);
+}
+
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* During drag - disable transitions for immediate response */
+.bottom-control-sheet--dragging {
+  transition: none !important;
+  will-change: transform, height;
+}
+
+/* Detent size data attributes for debugging/styling */
+.bottom-control-sheet[data-detent="small"] {
+  --sheet-height: 25vh;
+}
+
+.bottom-control-sheet[data-detent="medium"] {
+  --sheet-height: 50vh;
+}
+
+.bottom-control-sheet[data-detent="large"] {
+  --sheet-height: 90vh;
+}
+
+/* Drag handle - enlarged touch target for iOS feel */
+.sheet-handle {
+  width: 100%;
+  padding: 12px 0 8px;
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sheet-handle:active {
+  cursor: grabbing;
+}
+
+.sheet-handle-bar {
+  width: 40px;
+  height: 5px;
+  background: var(--color-border);
+  border-radius: 2.5px;
+  transition: background 0.15s ease, width 0.15s ease, transform 0.15s ease;
+}
+
+/* Visual feedback when hovering or dragging handle */
+.bottom-control-sheet:hover .sheet-handle-bar,
+.bottom-control-sheet--dragging .sheet-handle-bar {
+  background: var(--color-border-dark);
+  width: 48px;
+}
+
+/* Scale down slightly when grabbing for tactile feedback */
+.sheet-handle:active .sheet-handle-bar {
+  transform: scaleY(0.8);
+}
+
+/* Sheet content area */
+.sheet-content {
+  padding: 0 12px 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sheet-section {
+  margin-bottom: 12px;
+}
+
+.sheet-section:last-child {
+  margin-bottom: 0;
+}
+
+.sheet-section h4 {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.sheet-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.sheet-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sheet-btn:active {
+  transform: scale(0.95);
+}
+
+.sheet-btn .icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.sheet-btn.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Zoom controls in sheet */
+.sheet-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+}
+
+.sheet-zoom-controls .zoom-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.sheet-zoom-controls .zoom-value {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.sheet-zoom-controls .zoom-btn.reset {
+  font-size: 14px;
+}
+
+/* Scroll indicator gradient */
+.bottom-control-sheet::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to top, var(--color-bg) 0%, transparent 100%);
+  pointer-events: none;
+  display: block;
+  margin-top: -24px;
+}

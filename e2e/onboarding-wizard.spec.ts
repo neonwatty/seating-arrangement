@@ -229,3 +229,203 @@ test.describe('Onboarding Wizard - Spotlight', () => {
     await expect(page.locator('.onboarding-spotlight-ring')).not.toBeVisible();
   });
 });
+
+test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => localStorage.clear());
+  });
+
+  test('drag handle is visible on mobile', async ({ page }, testInfo) => {
+    // Only run on mobile projects
+    if (!testInfo.project.name.includes('Mobile')) {
+      test.skip(true, 'Drag handle is only visible on mobile');
+    }
+
+    await page.click('button:has-text("Start Planning Free")');
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
+
+    // Drag handle should be visible on mobile
+    await expect(page.locator('.onboarding-drag-handle')).toBeVisible();
+    await expect(page.locator('.onboarding-drag-handle-bar')).toBeVisible();
+  });
+
+  test('drag handle is hidden on desktop', async ({ page }, testInfo) => {
+    // Only run on desktop projects
+    if (testInfo.project.name.includes('Mobile')) {
+      test.skip(true, 'Test is for desktop behavior');
+    }
+
+    await page.click('button:has-text("Start Planning Free")');
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
+
+    // Drag handle should be hidden on desktop
+    await expect(page.locator('.onboarding-drag-handle')).not.toBeVisible();
+  });
+
+  test('swipe down minimizes wizard to pill on mobile', async ({ page }, testInfo) => {
+    // Only run on mobile projects
+    if (!testInfo.project.name.includes('Mobile')) {
+      test.skip(true, 'Swipe-to-minimize is only available on mobile');
+    }
+
+    await page.click('button:has-text("Start Planning Free")');
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
+
+    // Get the drag handle position for swipe simulation
+    const dragHandle = page.locator('.onboarding-drag-handle');
+    await expect(dragHandle).toBeVisible();
+    const box = await dragHandle.boundingBox();
+    if (!box) throw new Error('Drag handle not found');
+
+    // Simulate swipe down gesture on the drag handle
+    const startX = box.x + box.width / 2;
+    const startY = box.y + box.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX, startY + 100, { steps: 10 }); // Swipe down 100px
+    await page.mouse.up();
+
+    // Wait for animation
+    await page.waitForTimeout(400);
+
+    // Tooltip should be hidden, pill should be visible
+    await expect(page.locator('.onboarding-tooltip')).not.toBeVisible();
+    await expect(page.locator('.onboarding-pill')).toBeVisible();
+    await expect(page.locator('.onboarding-pill-text')).toContainText('Step 1/');
+    await expect(page.locator('.onboarding-pill-expand')).toContainText('Tap to continue');
+  });
+
+  test('tap pill expands wizard back', async ({ page }, testInfo) => {
+    // Only run on mobile projects
+    if (!testInfo.project.name.includes('Mobile')) {
+      test.skip(true, 'Pill is only available on mobile');
+    }
+
+    await page.click('button:has-text("Start Planning Free")');
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
+
+    // Minimize via swipe on drag handle
+    const dragHandle = page.locator('.onboarding-drag-handle');
+    const box = await dragHandle.boundingBox();
+    if (!box) throw new Error('Drag handle not found');
+
+    const startX = box.x + box.width / 2;
+    const startY = box.y + box.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX, startY + 100, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+
+    // Verify minimized
+    await expect(page.locator('.onboarding-pill')).toBeVisible();
+
+    // Tap pill to expand
+    await page.click('.onboarding-pill');
+    await page.waitForTimeout(200);
+
+    // Tooltip should be visible again, pill should be hidden
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible();
+    await expect(page.locator('.onboarding-pill')).not.toBeVisible();
+  });
+
+  test('escape key closes wizard even when minimized', async ({ page }, testInfo) => {
+    // Only run on mobile projects
+    if (!testInfo.project.name.includes('Mobile')) {
+      test.skip(true, 'This test is for mobile minimize behavior');
+    }
+
+    await page.click('button:has-text("Start Planning Free")');
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
+
+    // Minimize via swipe on drag handle
+    const dragHandle = page.locator('.onboarding-drag-handle');
+    const box = await dragHandle.boundingBox();
+    if (!box) throw new Error('Drag handle not found');
+
+    const startX = box.x + box.width / 2;
+    const startY = box.y + box.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX, startY + 100, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+
+    // Verify minimized
+    await expect(page.locator('.onboarding-pill')).toBeVisible();
+
+    // Press Escape
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+
+    // Both should be hidden (wizard closed)
+    await expect(page.locator('.onboarding-pill')).not.toBeVisible();
+    await expect(page.locator('.onboarding-tooltip')).not.toBeVisible();
+  });
+
+  test('pill shows correct step number', async ({ page }, testInfo) => {
+    // Only run on mobile projects
+    if (!testInfo.project.name.includes('Mobile')) {
+      test.skip(true, 'Pill is only available on mobile');
+    }
+
+    await page.click('button:has-text("Start Planning Free")');
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
+
+    // Navigate to step 2
+    await page.click('.onboarding-btn--next');
+    await page.waitForTimeout(200);
+
+    // Minimize via swipe on drag handle
+    const dragHandle = page.locator('.onboarding-drag-handle');
+    const box = await dragHandle.boundingBox();
+    if (!box) throw new Error('Drag handle not found');
+
+    const startX = box.x + box.width / 2;
+    const startY = box.y + box.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX, startY + 100, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+
+    // Pill should show step 2
+    await expect(page.locator('.onboarding-pill-text')).toContainText('Step 2/');
+  });
+
+  test('content is visible when wizard is minimized', async ({ page }, testInfo) => {
+    // Only run on mobile projects
+    if (!testInfo.project.name.includes('Mobile')) {
+      test.skip(true, 'This test is for mobile minimize behavior');
+    }
+
+    await page.click('button:has-text("Start Planning Free")');
+    await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
+
+    // Minimize via swipe on drag handle
+    const dragHandle = page.locator('.onboarding-drag-handle');
+    const box = await dragHandle.boundingBox();
+    if (!box) throw new Error('Drag handle not found');
+
+    const startX = box.x + box.width / 2;
+    const startY = box.y + box.height / 2;
+
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX, startY + 100, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+
+    // Verify minimized
+    await expect(page.locator('.onboarding-pill')).toBeVisible();
+
+    // The overlay should have pointer-events: none so content is accessible
+    // Verify the overlay has the minimized class
+    await expect(page.locator('.onboarding-overlay--minimized')).toBeVisible();
+  });
+});

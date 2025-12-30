@@ -92,11 +92,13 @@ interface OnboardingState {
   hasCompletedOnboarding: boolean;
   completedTours: Set<TourId>;
   activeTourId: TourId | null;
+  hasSeenImmersiveHint: boolean;
   setOnboardingComplete: () => void;
   resetOnboarding: () => void;
   markTourComplete: (tourId: TourId) => void;
   isTourComplete: (tourId: TourId) => boolean;
   setActiveTour: (tourId: TourId | null) => void;
+  setHasSeenImmersiveHint: () => void;
 }
 
 interface AppState extends OnboardingState {
@@ -663,10 +665,12 @@ export const useStore = create<AppState>()(
       hasCompletedOnboarding: false,
       completedTours: new Set<TourId>(),
       activeTourId: null,
+      hasSeenImmersiveHint: false,
 
       // Onboarding actions
       setOnboardingComplete: () => set({ hasCompletedOnboarding: true }),
-      resetOnboarding: () => set({ hasCompletedOnboarding: false, completedTours: new Set<TourId>() }),
+      resetOnboarding: () => set({ hasCompletedOnboarding: false, completedTours: new Set<TourId>(), hasSeenImmersiveHint: false }),
+      setHasSeenImmersiveHint: () => set({ hasSeenImmersiveHint: true }),
       markTourComplete: (tourId) => set((state) => {
         const newCompletedTours = new Set(state.completedTours);
         newCompletedTours.add(tourId);

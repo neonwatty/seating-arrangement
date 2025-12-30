@@ -92,7 +92,7 @@
   z-index: 999;
   animation: slideUpMenu 0.2s ease-out forwards;
   overflow-y: auto;
-  max-height: calc(100vh - 80px - env(safe-area-inset-bottom, 0px));
+  max-height: min(60vh, 500px); /* Limit height so canvas remains visible */
 }
 
 @keyframes slideUpMenu {
@@ -328,9 +328,15 @@
   fill: white;
 }
 
-/* Adjust menu sheet position to be above bottom nav */
+/* Adjust menu sheet position to be above bottom nav on non-canvas views */
+/* On canvas view, bottom nav is hidden so sheet can be lower */
 .mobile-menu-sheet {
   bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* When bottom nav is hidden (canvas view), position sheet at bottom */
+.mobile-menu-sheet.canvas-view {
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 /* Dark mode adjustments */

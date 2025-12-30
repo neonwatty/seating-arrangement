@@ -1,0 +1,204 @@
+/* Mobile Gesture Hints */
+
+/* Edge indicator - subtle visual on right edge */
+.edge-indicator {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 50;
+  pointer-events: none;
+}
+
+.edge-line {
+  width: 4px;
+  height: 60px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--color-primary) 50%,
+    transparent 100%
+  );
+  border-radius: 4px 0 0 4px;
+  opacity: 0.3;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scaleY(1.1);
+  }
+}
+
+/* First-time hint overlay */
+.gesture-hint-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gesture-hint-card {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 280px;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hint-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  background: var(--color-primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  animation: swipeHint 1.5s ease-in-out infinite;
+}
+
+@keyframes swipeHint {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-8px);
+  }
+}
+
+.hint-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.hint-content p {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.hint-dismiss {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+/* Demo animation */
+.gesture-demo {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.demo-hand {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: swipeDemo 2s ease-in-out infinite;
+  position: relative;
+}
+
+.demo-hand::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  width: 12px;
+  height: 16px;
+  background: white;
+  border-radius: 6px;
+  transform: rotate(-15deg);
+}
+
+@keyframes swipeDemo {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(-80px);
+    opacity: 1;
+  }
+  80%, 100% {
+    transform: translateX(-80px);
+    opacity: 0;
+  }
+}
+
+.demo-swipe-trail {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(to left, white, transparent);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  animation: trailDemo 2s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes trailDemo {
+  0%, 20% {
+    opacity: 0;
+    width: 0;
+  }
+  40% {
+    opacity: 0.6;
+    width: 60px;
+  }
+  60%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Dark mode */
+[data-theme="dark"] .gesture-hint-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .gesture-hint-overlay {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}

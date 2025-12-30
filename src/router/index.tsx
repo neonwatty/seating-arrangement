@@ -13,6 +13,7 @@ const DashboardView = lazy(() => import('../components/DashboardView').then(m =>
 const GuestManagementView = lazy(() => import('../components/GuestManagementView').then(m => ({ default: m.GuestManagementView })));
 const QRTableInfoPage = lazy(() => import('../components/QRTableInfoPage').then(m => ({ default: m.QRTableInfoPage })));
 const ShareableViewPage = lazy(() => import('../components/ShareableViewPage').then(m => ({ default: m.ShareableViewPage })));
+const MockupViewer = lazy(() => import('../../mockups/MockupViewer').then(m => ({ default: m.MockupViewer })));
 
 // Loading fallback component
 function LoadingFallback() {
@@ -133,6 +134,9 @@ export function AppRouter() {
         {/* Shareable read-only view */}
         <Route path="/share/:encodedData" element={<Suspense fallback={<LoadingFallback />}><ShareableViewPage /></Suspense>} />
         <Route path="/share" element={<Suspense fallback={<LoadingFallback />}><ShareableViewPage /></Suspense>} />
+
+        {/* Mockup viewer for design iteration */}
+        <Route path="/mockups" element={<Suspense fallback={<LoadingFallback />}><MockupViewer /></Suspense>} />
 
         {/* Fallback redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

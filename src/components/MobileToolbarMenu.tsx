@@ -231,7 +231,7 @@ export function MobileToolbarMenu({
   const menuContent = isOpen && (
     <>
       <div className="mobile-menu-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }} />
-      <div className="mobile-menu-sheet" role="menu" ref={menuSheetRef} onClick={(e) => e.stopPropagation()}>
+      <div className={`mobile-menu-sheet ${activeView === 'canvas' ? 'canvas-view' : ''}`} role="menu" ref={menuSheetRef} onClick={(e) => e.stopPropagation()}>
             {/* View Selection */}
             <div className="menu-section">
               <div className="menu-section-label">View</div>
@@ -569,7 +569,8 @@ export function MobileToolbarMenu({
       </button>
 
       {/* Render bottom nav via portal to escape transform containment */}
-      {createPortal(bottomNavContent, document.body)}
+      {/* Hide bottom nav on canvas view for cleaner mobile experience */}
+      {activeView !== 'canvas' && createPortal(bottomNavContent, document.body)}
 
       {/* Render menu sheet via portal */}
       {menuContent && createPortal(menuContent, document.body)}

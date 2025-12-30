@@ -1,10 +1,15 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useGesture } from '@use-gesture/react';
 import { useStore } from '../store/useStore';
 import { ONBOARDING_STEPS, type OnboardingStep } from '../data/onboardingSteps';
 import { trackOnboardingStep } from '../utils/analytics';
 import './OnboardingWizard.css';
+
+// Gesture thresholds for swipe-to-minimize
+const MINIMIZE_THRESHOLD = 80; // pixels to trigger minimize
+const VELOCITY_THRESHOLD = 0.5; // quick swipe velocity threshold
 
 // Helper to perform step actions
 const performStepAction = (action: string | undefined, setActiveView: (view: 'event-list' | 'dashboard' | 'canvas' | 'guests') => void) => {
@@ -33,7 +38,11 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const dragHandleRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const { activeView, setActiveView, sidebarOpen, toggleSidebar, currentEventId } = useStore();
 
@@ -59,21 +68,82 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [currentStepIndex, isMobile]);
 
-  // Reset step index when tour changes or reopens
+  // Reset step index and minimize state when tour changes or reopens
   useEffect(() => {
     if (isOpen) {
       setCurrentStepIndex(0);
+      setIsMinimized(false);
+      setDragOffset(0);
     }
   }, [isOpen, customSteps]);
 
   // Track viewport size for mobile detection
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 600);
+      const nowMobile = window.innerWidth <= 600;
+      setIsMobile(nowMobile);
+      // Reset minimize state when switching to desktop
+      if (!nowMobile && isMinimized) {
+        setIsMinimized(false);
+        setDragOffset(0);
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, [isMinimized]);
+
+  // Handle expand from minimized state
+  const handleExpand = useCallback(() => {
+    setIsMinimized(false);
+    setDragOffset(0);
+    // Focus the tooltip after expansion
+    setTimeout(() => {
+      tooltipRef.current?.focus();
+    }, 100);
   }, []);
+
+  // Swipe-to-minimize gesture handler (mobile only) - targets drag handle only
+  useGesture(
+    {
+      onDrag: ({ movement: [, my], velocity: [, vy], direction: [, dy], active, cancel }) => {
+        // Only handle on mobile when not minimized
+        if (!isMobile || isMinimized) {
+          cancel?.();
+          return;
+        }
+
+        // Only process downward swipes
+        if (dy <= 0 && my <= 0) {
+          setDragOffset(0);
+          return;
+        }
+
+        if (active) {
+          // During drag - show visual feedback (only for downward movement)
+          setDragOffset(Math.max(0, my));
+        } else {
+          // On release - check thresholds
+          if (my > MINIMIZE_THRESHOLD || (vy > VELOCITY_THRESHOLD && dy > 0)) {
+            setIsMinimized(true);
+            // Focus the pill after minimizing
+            setTimeout(() => {
+              pillRef.current?.focus();
+            }, 100);
+          }
+          setDragOffset(0);
+        }
+      },
+    },
+    {
+      target: dragHandleRef,
+      drag: {
+        pointer: { touch: true },
+        axis: 'y',
+        filterTaps: true,
+        threshold: 10,
+      },
+    }
+  );
 
   // Update target element rect
   const updateTargetRect = useCallback(() => {
@@ -168,7 +238,13 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleSkip();
-      } else if (e.key === 'ArrowRight' || e.key === 'Enter') {
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        // If minimized, expand first
+        if (isMinimized) {
+          e.preventDefault();
+          handleExpand();
+          return;
+        }
         if (isLastStep) {
           handleComplete();
         } else {
@@ -179,14 +255,28 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
           trackOnboardingStep(currentStepIndex + 2, steps.length);
           setCurrentStepIndex((i) => i + 1);
         }
+      } else if (e.key === 'ArrowRight') {
+        // Ignore navigation keys when minimized
+        if (isMinimized) return;
+        if (isLastStep) {
+          handleComplete();
+        } else {
+          if (stepProps.action) {
+            performStepAction(stepProps.action, setActiveView);
+          }
+          trackOnboardingStep(currentStepIndex + 2, steps.length);
+          setCurrentStepIndex((i) => i + 1);
+        }
       } else if (e.key === 'ArrowLeft' && !isFirstStep) {
+        // Ignore navigation keys when minimized
+        if (isMinimized) return;
         setCurrentStepIndex((i) => i - 1);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isLastStep, isFirstStep, handleComplete, handleSkip, stepProps.action, setActiveView, currentStepIndex, steps.length]);
+  }, [isOpen, isLastStep, isFirstStep, isMinimized, handleComplete, handleSkip, handleExpand, stepProps.action, setActiveView, currentStepIndex, steps.length]);
 
   if (!isOpen) return null;
 
@@ -319,112 +409,155 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
 
   const arrowPosition = getArrowPosition();
 
+  // On mobile, don't allow clicking overlay to skip (too easy to accidentally close)
+  // On desktop, only allow overlay click to skip for non-centered steps (centered modals shouldn't dismiss on backdrop click)
+  const shouldAllowOverlaySkip = !isMinimized && !isMobile && currentStep.placement !== 'center';
+
   return createPortal(
-    <div className="onboarding-overlay" onClick={handleSkip}>
-      {/* Spotlight mask overlay */}
-      {spotlightRect && (
-        <svg className="onboarding-spotlight-svg" width="100%" height="100%">
-          <defs>
-            <mask id="spotlight-mask">
-              <rect width="100%" height="100%" fill="white" />
+    <div className={`onboarding-overlay ${isMinimized ? 'onboarding-overlay--minimized' : ''}`} onClick={shouldAllowOverlaySkip ? handleSkip : undefined}>
+      {/* Only show spotlight/backdrop when NOT minimized */}
+      {!isMinimized && (
+        <>
+          {/* Spotlight mask overlay */}
+          {spotlightRect && (
+            <svg className="onboarding-spotlight-svg" width="100%" height="100%">
+              <defs>
+                <mask id="spotlight-mask">
+                  <rect width="100%" height="100%" fill="white" />
+                  <rect
+                    x={spotlightRect.x}
+                    y={spotlightRect.y}
+                    width={spotlightRect.width}
+                    height={spotlightRect.height}
+                    rx="8"
+                    fill="black"
+                  />
+                </mask>
+              </defs>
               <rect
-                x={spotlightRect.x}
-                y={spotlightRect.y}
-                width={spotlightRect.width}
-                height={spotlightRect.height}
-                rx="8"
-                fill="black"
+                width="100%"
+                height="100%"
+                fill="rgba(0, 0, 0, 0.75)"
+                mask="url(#spotlight-mask)"
               />
-            </mask>
-          </defs>
-          <rect
-            width="100%"
-            height="100%"
-            fill="rgba(0, 0, 0, 0.75)"
-            mask="url(#spotlight-mask)"
-          />
-        </svg>
-      )}
+            </svg>
+          )}
 
-      {/* Spotlight ring */}
-      {spotlightRect && (
-        <div
-          className="onboarding-spotlight-ring"
-          style={{
-            left: spotlightRect.x,
-            top: spotlightRect.y,
-            width: spotlightRect.width,
-            height: spotlightRect.height,
-          }}
-        />
-      )}
-
-      {/* Backdrop for any step without a target (centered or when target element not found) */}
-      {!targetRect && (
-        <div className="onboarding-backdrop" />
-      )}
-
-      {/* Mobile: Target highlight box */}
-      {isMobile && targetRect && currentStep.placement !== 'center' && (
-        <div
-          className="onboarding-target-highlight"
-          style={{
-            left: targetRect.left - 4,
-            top: targetRect.top - 4,
-            width: targetRect.width + 8,
-            height: targetRect.height + 8,
-          }}
-        />
-      )}
-
-      {/* Mobile: Arrow pointing to target */}
-      {arrowPosition && (
-        <div className="onboarding-arrow">
-          <svg
-            width={window.innerWidth}
-            height={window.innerHeight}
-            style={{ position: 'fixed', top: 0, left: 0 }}
-          >
-            <defs>
-              <marker
-                id="arrowhead"
-                markerWidth="10"
-                markerHeight="7"
-                refX="9"
-                refY="3.5"
-                orient="auto"
-              >
-                <polygon
-                  points="0 0, 10 3.5, 0 7"
-                  fill="var(--color-primary)"
-                />
-              </marker>
-            </defs>
-            <line
-              x1={arrowPosition.startX}
-              y1={arrowPosition.startY}
-              x2={arrowPosition.targetX}
-              y2={arrowPosition.targetY}
-              stroke="var(--color-primary)"
-              strokeWidth="3"
-              markerEnd="url(#arrowhead)"
-              strokeLinecap="round"
+          {/* Spotlight ring */}
+          {spotlightRect && (
+            <div
+              className="onboarding-spotlight-ring"
+              style={{
+                left: spotlightRect.x,
+                top: spotlightRect.y,
+                width: spotlightRect.width,
+                height: spotlightRect.height,
+              }}
             />
-          </svg>
-        </div>
+          )}
+
+          {/* Backdrop for any step without a target (centered or when target element not found) */}
+          {!targetRect && (
+            <div className="onboarding-backdrop" />
+          )}
+
+          {/* Mobile: Target highlight box */}
+          {isMobile && targetRect && currentStep.placement !== 'center' && (
+            <div
+              className="onboarding-target-highlight"
+              style={{
+                left: targetRect.left - 4,
+                top: targetRect.top - 4,
+                width: targetRect.width + 8,
+                height: targetRect.height + 8,
+              }}
+            />
+          )}
+
+          {/* Mobile: Arrow pointing to target */}
+          {arrowPosition && (
+            <div className="onboarding-arrow">
+              <svg
+                width={window.innerWidth}
+                height={window.innerHeight}
+                style={{ position: 'fixed', top: 0, left: 0 }}
+              >
+                <defs>
+                  <marker
+                    id="arrowhead"
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="9"
+                    refY="3.5"
+                    orient="auto"
+                  >
+                    <polygon
+                      points="0 0, 10 3.5, 0 7"
+                      fill="var(--color-primary)"
+                    />
+                  </marker>
+                </defs>
+                <line
+                  x1={arrowPosition.startX}
+                  y1={arrowPosition.startY}
+                  x2={arrowPosition.targetX}
+                  y2={arrowPosition.targetY}
+                  stroke="var(--color-primary)"
+                  strokeWidth="3"
+                  markerEnd="url(#arrowhead)"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+          )}
+        </>
       )}
 
-      {/* Tooltip */}
-      <div
-        ref={tooltipRef}
-        className={`onboarding-tooltip onboarding-tooltip--${currentStep.placement}`}
-        style={getTooltipPosition()}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="onboarding-tooltip-content">
-          <h3>{currentStep.title}</h3>
-          <p>{currentStep.description}</p>
-        </div>
+      {/* Minimized Pill State (mobile only) */}
+      {isMobile && isMinimized && (
+        <button
+          ref={pillRef}
+          className="onboarding-pill"
+          onClick={handleExpand}
+          aria-label={`Tour step ${currentStepIndex + 1} of ${steps.length}. Tap to expand.`}
+          aria-expanded="false"
+        >
+          <span className="onboarding-pill-indicator" aria-hidden="true" />
+          <span className="onboarding-pill-text">
+            Step {currentStepIndex + 1}/{steps.length}
+          </span>
+          <span className="onboarding-pill-expand">Tap to continue</span>
+        </button>
+      )}
+
+      {/* Full Tooltip - hidden when minimized on mobile */}
+      {(!isMobile || !isMinimized) && (
+        <div
+          ref={tooltipRef}
+          className={`onboarding-tooltip onboarding-tooltip--${currentStep.placement} ${
+            isMobile && dragOffset > 0 ? 'onboarding-tooltip--dragging' : ''
+          }`}
+          style={{
+            ...getTooltipPosition(),
+            ...(isMobile && dragOffset > 0 ? {
+              transform: `translateY(${dragOffset}px)`,
+              opacity: Math.max(0.5, 1 - dragOffset / 150),
+            } : {}),
+          }}
+          onClick={(e) => e.stopPropagation()}
+          tabIndex={-1}
+        >
+          {/* Drag handle for mobile swipe-to-minimize */}
+          {isMobile && (
+            <div ref={dragHandleRef} className="onboarding-drag-handle" aria-hidden="true">
+              <span className="onboarding-drag-handle-bar" />
+            </div>
+          )}
+
+          <div className="onboarding-tooltip-content">
+            <h3>{currentStep.title}</h3>
+            <p>{currentStep.description}</p>
+          </div>
 
         <div className="onboarding-tooltip-footer">
           <div className="onboarding-progress">
@@ -470,6 +603,7 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
           </div>
         </div>
       </div>
+      )}
     </div>,
     document.body
   );

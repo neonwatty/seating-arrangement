@@ -4,6 +4,7 @@ import { getFullName } from '../types';
 import { useIsMobile } from '../hooks/useResponsive';
 import { ViewToggle } from './ViewToggle';
 import { MobileToolbarMenu } from './MobileToolbarMenu';
+import { MobileCanvasToolbar } from './MobileCanvasToolbar';
 import { showToast } from './toastStore';
 import type { TableShape } from '../types';
 import type { TourId } from '../data/tourRegistry';
@@ -102,8 +103,23 @@ export function MainToolbar({ children, onAddGuest, onImport, showRelationships,
     }
   };
 
-  // Render mobile hamburger menu on mobile devices
+  // Render mobile toolbar on mobile devices
   if (isMobile) {
+    // Canvas view gets a minimal toolbar
+    if (activeView === 'canvas') {
+      return (
+        <MobileCanvasToolbar
+          onShowHelp={onShowHelp}
+          onStartTour={onStartTour}
+          showRelationships={showRelationships}
+          onToggleRelationships={onToggleRelationships}
+        >
+          {children}
+        </MobileCanvasToolbar>
+      );
+    }
+
+    // Other views get the full mobile menu
     return (
       <div className="main-toolbar mobile">
         <MobileToolbarMenu

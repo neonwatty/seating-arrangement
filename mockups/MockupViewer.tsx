@@ -4,9 +4,11 @@ import { GuestManagementMockup } from './GuestManagementMockup';
 import { SurveyBuilderMockup } from './SurveyBuilderMockup';
 import { OptimizationResultsMockup } from './OptimizationResultsMockup';
 import { MobileResponsiveMockup } from './MobileResponsiveMockup';
+import { GestureImmersiveMockup } from './GestureImmersiveMockup';
 import './MockupViewer.css';
 
 const mockups = [
+  { id: 'gesture', name: 'Gesture Immersive', component: GestureImmersiveMockup },
   { id: 'dashboard', name: 'Dashboard', component: DashboardMockup },
   { id: 'guests', name: 'Guest Management', component: GuestManagementMockup },
   { id: 'survey', name: 'Survey Builder', component: SurveyBuilderMockup },
@@ -15,13 +17,26 @@ const mockups = [
 ];
 
 export function MockupViewer() {
-  const [activeMockup, setActiveMockup] = useState('dashboard');
-  const ActiveComponent = mockups.find(m => m.id === activeMockup)?.component || DashboardMockup;
+  const [activeMockup, setActiveMockup] = useState('gesture');
+  const ActiveComponent = mockups.find(m => m.id === activeMockup)?.component || GestureImmersiveMockup;
 
   return (
     <div className="mockup-viewer">
       <nav className="mockup-nav">
-        <h2>Mockup Viewer</h2>
+        <h2>Mockups</h2>
+        {/* Mobile: Dropdown selector */}
+        <select
+          className="mockup-select"
+          value={activeMockup}
+          onChange={(e) => setActiveMockup(e.target.value)}
+        >
+          {mockups.map(mockup => (
+            <option key={mockup.id} value={mockup.id}>
+              {mockup.name}
+            </option>
+          ))}
+        </select>
+        {/* Desktop: Tab buttons */}
         <div className="mockup-tabs">
           {mockups.map(mockup => (
             <button

@@ -322,6 +322,144 @@
   }
 }
 
+/* ========== MINIMIZED PILL STATE ========== */
+.onboarding-pill {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px)); /* Above bottom nav */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--color-bg);
+  border: 2px solid var(--color-primary);
+  border-radius: 9999px;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  z-index: 10001;
+  animation: pillSlideUp 0.3s var(--ease-spring);
+  transition: transform 0.15s var(--ease-out),
+              box-shadow 0.15s var(--ease-out);
+  font-family: inherit;
+}
+
+.onboarding-pill:hover,
+.onboarding-pill:focus {
+  transform: translateX(-50%) scale(1.02);
+  box-shadow: var(--shadow-xl);
+  outline: none;
+}
+
+.onboarding-pill:active {
+  transform: translateX(-50%) scale(0.98);
+}
+
+@keyframes pillSlideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Pill indicator dot */
+.onboarding-pill-indicator {
+  width: 8px;
+  height: 8px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  animation: pillPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pillPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* Pill text */
+.onboarding-pill-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.onboarding-pill-expand {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+/* ========== DRAG HANDLE ========== */
+.onboarding-drag-handle {
+  display: none; /* Hidden by default, shown on mobile */
+  justify-content: center;
+  padding: 10px 0 6px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.onboarding-drag-handle:active {
+  cursor: grabbing;
+}
+
+.onboarding-drag-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  transition: background 0.15s var(--ease-out);
+}
+
+.onboarding-tooltip:hover .onboarding-drag-handle-bar {
+  background: var(--color-border-dark);
+}
+
+/* ========== MINIMIZED OVERLAY STATE ========== */
+.onboarding-overlay--minimized {
+  pointer-events: none;
+}
+
+.onboarding-overlay--minimized .onboarding-pill {
+  pointer-events: auto;
+}
+
+/* ========== MOBILE DRAG HANDLE & TRANSITIONS ========== */
+@media (max-width: 600px) {
+  /* Show drag handle on mobile */
+  .onboarding-drag-handle {
+    display: flex;
+  }
+
+  /* Reduce top padding since drag handle provides visual break */
+  .onboarding-tooltip .onboarding-tooltip-content {
+    padding-top: 0.75rem;
+  }
+
+  /* Dragging state - disable transitions during gesture for responsiveness */
+  .onboarding-tooltip--dragging {
+    transition: none !important;
+    will-change: transform, opacity;
+  }
+}
+
+/* ========== DARK MODE FOR PILL ========== */
+[data-theme="dark"] .onboarding-pill {
+  background: var(--color-bg-secondary);
+}
+
 /* Dark Mode */
 [data-theme="dark"] .onboarding-tooltip {
   background: var(--color-bg-secondary);
