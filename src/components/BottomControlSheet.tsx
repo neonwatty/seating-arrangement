@@ -58,28 +58,38 @@ export function BottomControlSheet({
   const [detent, setDetent] = useState<DetentSize>(initialDetent);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [isEntering, setIsEntering] = useState(true);
+  const [isEntering, setIsEntering] = useState(false);
 
   // Refs
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const prevVisibleRef = useRef(isVisible);
 
-  // Reset entering state after animation
+  // Track entering animation state via ref comparison
   useEffect(() => {
-    if (isVisible) {
-      setIsEntering(true);
-      const timer = setTimeout(() => setIsEntering(false), 350);
-      return () => clearTimeout(timer);
+    const wasVisible = prevVisibleRef.current;
+    prevVisibleRef.current = isVisible;
+
+    // Only start entering animation when transitioning from hidden to visible
+    if (isVisible && !wasVisible) {
+      // Use setTimeout to avoid synchronous setState in effect
+      const enterTimer = setTimeout(() => setIsEntering(true), 0);
+      const exitTimer = setTimeout(() => setIsEntering(false), 350);
+      return () => {
+        clearTimeout(enterTimer);
+        clearTimeout(exitTimer);
+      };
     }
-  }, [isVisible]);
 
-  // Reset detent when sheet closes
-  useEffect(() => {
-    if (!isVisible) {
-      setDetent(initialDetent);
-      setDragOffset(0);
-      setIsDragging(false);
+    // Reset state when closing
+    if (!isVisible && wasVisible) {
+      const resetTimer = setTimeout(() => {
+        setDetent(initialDetent);
+        setDragOffset(0);
+        setIsDragging(false);
+      }, 0);
+      return () => clearTimeout(resetTimer);
     }
   }, [isVisible, initialDetent]);
 
