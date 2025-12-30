@@ -409,8 +409,12 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
 
   const arrowPosition = getArrowPosition();
 
+  // On mobile, don't allow clicking overlay to skip (too easy to accidentally close)
+  // On desktop, only allow overlay click to skip for non-centered steps (centered modals shouldn't dismiss on backdrop click)
+  const shouldAllowOverlaySkip = !isMinimized && !isMobile && currentStep.placement !== 'center';
+
   return createPortal(
-    <div className={`onboarding-overlay ${isMinimized ? 'onboarding-overlay--minimized' : ''}`} onClick={isMinimized ? undefined : handleSkip}>
+    <div className={`onboarding-overlay ${isMinimized ? 'onboarding-overlay--minimized' : ''}`} onClick={shouldAllowOverlaySkip ? handleSkip : undefined}>
       {/* Only show spotlight/backdrop when NOT minimized */}
       {!isMinimized && (
         <>
