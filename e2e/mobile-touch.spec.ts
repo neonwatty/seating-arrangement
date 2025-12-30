@@ -24,12 +24,17 @@ test.describe('Mobile Responsive Layout', () => {
       // Wait for app to stabilize after initial load
       await page.waitForTimeout(500);
 
-      // Click corner indicator using tap for mobile emulation
+      // Click corner indicator
       const cornerIndicator = page.locator('.corner-indicator');
       await expect(cornerIndicator).toBeVisible();
 
-      // Use dispatchEvent tap for more reliable mobile interaction
-      await cornerIndicator.tap();
+      // Use tap() for touch-enabled contexts, fall back to click()
+      try {
+        await cornerIndicator.tap();
+      } catch {
+        // Fallback for non-touch contexts (desktop chromium)
+        await cornerIndicator.click();
+      }
 
       // Wait for state update
       await page.waitForTimeout(200);
