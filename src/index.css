@@ -455,7 +455,9 @@ body {
 
 #root {
   width: 100vw;
+  /* Use dvh for Safari mobile viewport fix, with vh fallback */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 

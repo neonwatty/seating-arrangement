@@ -1,7 +1,9 @@
 .app {
   display: flex;
   flex-direction: column;
+  /* Use dvh for Safari mobile viewport fix, with vh fallback */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background:
     /* Subtle noise overlay */
