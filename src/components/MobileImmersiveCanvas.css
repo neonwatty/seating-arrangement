@@ -8,6 +8,154 @@
   min-height: 0; /* Allow flex shrinking */
 }
 
+/* ===== LANDSCAPE MODE STYLES ===== */
+
+/* Landscape compact header - always visible in landscape */
+.landscape-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  padding-left: calc(env(safe-area-inset-left, 0px) + 12px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 12px);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-light);
+  z-index: 200;
+  height: 44px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.landscape-back-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.landscape-back-btn:active {
+  transform: scale(0.95);
+}
+
+.landscape-event-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.landscape-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.landscape-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landscape-action-btn:active {
+  transform: scale(0.95);
+  background: var(--color-primary-light);
+}
+
+/* Adjust canvas container for landscape header */
+.mobile-immersive-canvas[data-landscape="true"] {
+  padding-top: 44px;
+}
+
+/* Hide edge hints in landscape */
+.mobile-immersive-canvas[data-landscape="true"] .edge-hint {
+  display: none;
+}
+
+/* ===== LANDSCAPE BOTTOM SHEET ADJUSTMENTS ===== */
+
+/* In landscape mode, reduce sheet heights since vertical space is limited */
+@media (orientation: landscape) and (max-height: 500px) {
+  .bottom-control-sheet {
+    /* Cap max height at 70% in landscape */
+    max-height: 70vh;
+  }
+
+  .bottom-control-sheet[data-detent="small"] {
+    --sheet-height: 35vh;
+  }
+
+  .bottom-control-sheet[data-detent="medium"] {
+    --sheet-height: 55vh;
+  }
+
+  .bottom-control-sheet[data-detent="large"] {
+    --sheet-height: 70vh;
+  }
+
+  /* More compact sheet content in landscape */
+  .sheet-section {
+    margin-bottom: 8px;
+  }
+
+  .sheet-section h4 {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+
+  .sheet-buttons {
+    gap: 4px;
+  }
+
+  .sheet-btn {
+    padding: 6px 4px;
+    font-size: 9px;
+  }
+
+  .sheet-btn .icon {
+    font-size: 16px;
+  }
+
+  .sheet-zoom-controls {
+    padding: 4px 8px;
+  }
+
+  .sheet-zoom-controls .zoom-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .sheet-zoom-controls .zoom-value {
+    font-size: 12px;
+  }
+
+  /* Account for landscape header in sheet position */
+  .sheet-backdrop {
+    top: 44px;
+  }
+}
+
 /* Corner Indicator */
 .corner-indicator {
   position: fixed;
@@ -120,6 +268,59 @@
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Landscape Orientation Hint */
+.landscape-hint {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  animation: landscapeHintFadeIn 0.4s ease-out;
+  cursor: pointer;
+}
+
+.landscape-hint-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 12px 20px;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.landscape-hint .rotate-icon {
+  animation: rotateIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes landscapeHintFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes rotateIconPulse {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-15deg);
+  }
+  75% {
+    transform: rotate(15deg);
   }
 }
 

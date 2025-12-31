@@ -178,3 +178,47 @@
     background: rgba(0, 0, 0, 0.5);
   }
 }
+
+/* ===== LANDSCAPE MODE ===== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mobile-fab-container {
+    /* Account for safe areas in landscape (iPhone notch on sides) */
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Smaller FAB in landscape to save vertical space */
+  .mobile-fab {
+    width: 48px;
+    height: 48px;
+  }
+
+  .fab-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Compact actions in landscape */
+  .fab-actions {
+    gap: 8px;
+  }
+
+  .fab-action {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .fab-action-icon {
+    font-size: 16px;
+    width: 20px;
+  }
+
+  .fab-action-label {
+    font-size: 13px;
+  }
+
+  /* Account for landscape header */
+  .fab-backdrop {
+    top: 44px;
+  }
+}

@@ -147,3 +147,87 @@ export function useViewportSize() {
 
   return size;
 }
+
+export type Orientation = 'portrait' | 'landscape';
+
+/**
+ * Hook to detect device orientation.
+ * Returns 'landscape' when width > height, 'portrait' otherwise.
+ */
+export function useOrientation(): Orientation {
+  const [orientation, setOrientation] = useState<Orientation>(() => {
+    if (typeof window === 'undefined') return 'portrait';
+    return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+  });
+
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      setOrientation(window.innerWidth > window.innerHeight ? 'landscape' : 'portrait');
+    };
+
+    // Listen for resize events (covers orientation changes)
+    window.addEventListener('resize', handleOrientationChange);
+
+    // Also listen for orientation change events (mobile-specific)
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('resize', handleOrientationChange);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
+
+  return orientation;
+}
+
+/**
+ * Hook to detect if device is in mobile landscape mode.
+ * This is specifically for phones rotated to landscape -
+ * characterized by landscape orientation AND short viewport height.
+ *
+ * Mobile landscape typically has:
+ * - Height under 500px (phone screens are narrow)
+ * - Width greater than height
+ * - Touch capability
+ */
+export function useMobileLandscape(): boolean {
+  const orientation = useOrientation();
+  const { height } = useViewportSize();
+  const isTouch = useIsTouchDevice();
+
+  // Mobile landscape: landscape orientation, short height, touch device
+  // Height threshold of 500px catches most phones in landscape
+  // but excludes tablets which have taller landscape heights
+  return orientation === 'landscape' && height < 500 && isTouch;
+}
+
+/**
+ * Hook for comprehensive mobile layout detection.
+ * Returns layout mode considering both breakpoint and orientation.
+ */
+export function useMobileLayout(): {
+  isMobile: boolean;
+  isLandscape: boolean;
+  isMobileLandscape: boolean;
+  layoutMode: 'mobile-portrait' | 'mobile-landscape' | 'tablet' | 'desktop';
+} {
+  const breakpoint = useBreakpoint();
+  const orientation = useOrientation();
+  const isMobileLandscape = useMobileLandscape();
+
+  const isMobile = breakpoint === 'mobile' || isMobileLandscape;
+  const isLandscape = orientation === 'landscape';
+
+  let layoutMode: 'mobile-portrait' | 'mobile-landscape' | 'tablet' | 'desktop';
+  if (isMobileLandscape) {
+    layoutMode = 'mobile-landscape';
+  } else if (breakpoint === 'mobile') {
+    layoutMode = 'mobile-portrait';
+  } else if (breakpoint === 'tablet') {
+    layoutMode = 'tablet';
+  } else {
+    layoutMode = 'desktop';
+  }
+
+  return { isMobile, isLandscape, isMobileLandscape, layoutMode };
+}
