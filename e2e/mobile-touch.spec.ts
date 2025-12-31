@@ -263,6 +263,21 @@ test.describe('Viewport Breakpoints', () => {
     await expect(page.locator('.header')).toBeVisible();
   });
 
+  test('canvas container fills viewport height on mobile (Safari dvh fix)', async ({ page }) => {
+    await page.setViewportSize(MOBILE_VIEWPORT);
+    await enterApp(page);
+
+    // Verify the canvas container has meaningful height (not collapsed to 0)
+    // This catches the Safari 100vh vs 100dvh bug where the canvas would be blank
+    const canvasContainer = page.locator('.canvas-container');
+    await expect(canvasContainer).toBeVisible();
+
+    const box = await canvasContainer.boundingBox();
+    expect(box).not.toBeNull();
+    // Canvas should fill most of the viewport (at least 80% of viewport height)
+    expect(box!.height).toBeGreaterThan(MOBILE_VIEWPORT.height * 0.8);
+  });
+
   test('app renders correctly at tablet width', async ({ page }) => {
     await page.setViewportSize(TABLET_VIEWPORT);
     await enterApp(page);
