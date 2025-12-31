@@ -347,3 +347,70 @@
     background: rgba(0, 0, 0, 0.5);
   }
 }
+
+/* ===== LANDSCAPE MODE ===== */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Account for landscape header */
+  .mobile-guest-panel {
+    top: 44px;
+    padding-top: 0;
+  }
+
+  .mobile-guest-panel-backdrop {
+    top: 44px;
+  }
+
+  /* More compact header */
+  .panel-header {
+    padding: 10px 16px;
+    padding-top: 10px;
+  }
+
+  .panel-header h2 {
+    font-size: 16px;
+  }
+
+  /* Compact search */
+  .panel-search {
+    padding: 8px 16px;
+  }
+
+  .panel-search input {
+    font-size: 14px;
+  }
+
+  /* Compact filters */
+  .panel-filters {
+    padding: 8px 16px;
+  }
+
+  .filter-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  /* Compact guest items */
+  .panel-guest-item {
+    padding: 8px 16px;
+  }
+
+  .guest-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .guest-name {
+    font-size: 14px;
+  }
+
+  .guest-group,
+  .guest-table {
+    font-size: 11px;
+  }
+
+  /* Adjust edge indicator for landscape header */
+  .edge-indicator {
+    top: calc(50% + 22px);
+  }
+}

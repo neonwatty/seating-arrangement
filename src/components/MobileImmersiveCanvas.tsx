@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useGesture } from '@use-gesture/react';
+import { useNavigate } from 'react-router-dom';
 import { TransientTopBar } from './TransientTopBar';
 import { BottomControlSheet } from './BottomControlSheet';
 import { useStore } from '../store/useStore';
 import { GESTURE_CONFIG } from '../utils/gestureUtils';
+import { useMobileLandscape } from '../hooks/useResponsive';
 import './MobileImmersiveCanvas.css';
 
 interface MobileImmersiveCanvasProps {
@@ -33,7 +35,9 @@ export function MobileImmersiveCanvas({
   onOpenGuestPanel,
   onCloseGuestPanel,
 }: MobileImmersiveCanvasProps) {
-  const { hasSeenImmersiveHint, setHasSeenImmersiveHint } = useStore();
+  const navigate = useNavigate();
+  const { event, hasSeenImmersiveHint, setHasSeenImmersiveHint } = useStore();
+  const isLandscape = useMobileLandscape();
 
   const [topBarVisible, setTopBarVisible] = useState(false);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -187,17 +191,63 @@ export function MobileImmersiveCanvas({
     setHasSeenImmersiveHint();
   };
 
+  // Handle back navigation
+  const handleBack = () => {
+    navigate('/events');
+  };
+
   return (
-    <div className="mobile-immersive-canvas">
+    <div
+      className="mobile-immersive-canvas"
+      data-landscape={isLandscape ? 'true' : 'false'}
+    >
+      {/* Landscape compact header - always visible in landscape */}
+      {isLandscape && (
+        <div className="landscape-header">
+          <button
+            className="landscape-back-btn"
+            onClick={handleBack}
+            aria-label="Back to events"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18">
+              <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+          </button>
+          <span className="landscape-event-name">{event.name || 'Untitled Event'}</span>
+          <div className="landscape-actions">
+            <button
+              className="landscape-action-btn"
+              onClick={openGuestPanel}
+              aria-label="Open guest panel"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+              </svg>
+            </button>
+            <button
+              className="landscape-action-btn"
+              onClick={openBottomSheet}
+              aria-label="Open settings"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main canvas content */}
       {children}
 
-      {/* Transient Top Bar */}
-      <TransientTopBar
-        isVisible={topBarVisible}
-        onClose={closeAll}
-        onOpenSettings={openBottomSheet}
-      />
+      {/* Transient Top Bar - only in portrait mode */}
+      {!isLandscape && (
+        <TransientTopBar
+          isVisible={topBarVisible}
+          onClose={closeAll}
+          onOpenSettings={openBottomSheet}
+        />
+      )}
 
       {/* Bottom Control Sheet */}
       <BottomControlSheet
@@ -208,17 +258,19 @@ export function MobileImmersiveCanvas({
         onShowImport={onShowImport}
       />
 
-      {/* Corner Indicator - always visible */}
-      <button
-        className="corner-indicator"
-        onClick={handleCornerTap}
-        aria-label="Show controls"
-      >
-        <span className="indicator-dot" />
-      </button>
+      {/* Corner Indicator - only in portrait mode */}
+      {!isLandscape && (
+        <button
+          className="corner-indicator"
+          onClick={handleCornerTap}
+          aria-label="Show controls"
+        >
+          <span className="indicator-dot" />
+        </button>
+      )}
 
-      {/* First-time hint */}
-      {showHint && (
+      {/* First-time hint - only in portrait mode */}
+      {showHint && !isLandscape && (
         <div className="immersive-hint">
           <div className="hint-content">
             <p><strong>Swipe to access controls</strong></p>
@@ -227,9 +279,13 @@ export function MobileImmersiveCanvas({
         </div>
       )}
 
-      {/* Edge hint indicators */}
-      <div className="edge-hint top" />
-      <div className="edge-hint bottom" />
+      {/* Edge hint indicators - only in portrait mode */}
+      {!isLandscape && (
+        <>
+          <div className="edge-hint top" />
+          <div className="edge-hint bottom" />
+        </>
+      )}
     </div>
   );
 }
