@@ -9,9 +9,33 @@ import { captureUtmParams } from '../utils/utm';
 import { shouldShowEmailCapture } from '../utils/emailCaptureManager';
 import type { TourId } from '../data/tourRegistry';
 
+const faqItems = [
+  {
+    question: 'Is my data secure?',
+    answer: 'Yes! All your event data is stored locally in your browser using localStorage. Your guest lists, seating arrangements, and relationship data never leave your device — we don\'t have servers that store your information.',
+  },
+  {
+    question: 'Do I need to create an account?',
+    answer: 'No account needed! Just open the app and start planning. Your data saves automatically to your browser. You can export your seating charts anytime.',
+  },
+  {
+    question: 'Can I use this on my phone?',
+    answer: 'Absolutely! Seatify is fully responsive and works great on phones, tablets, and desktops. Drag-and-drop works with touch gestures on mobile devices.',
+  },
+  {
+    question: 'How does the seating optimizer work?',
+    answer: 'Our optimizer uses a smart algorithm that considers guest relationships. It keeps couples and partners together, respects "keep apart" constraints, and distributes groups evenly across tables to create balanced, harmonious seating.',
+  },
+  {
+    question: 'Is Seatify really free?',
+    answer: 'Yes, 100% free! There are no hidden fees, premium tiers, or feature limits. We believe everyone deserves access to great event planning tools.',
+  },
+];
+
 export function LandingPage() {
   const navigate = useNavigate();
   const [showEmailCapture, setShowEmailCapture] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   // Check if user has already subscribed (don't show button if so)
   const canShowEmailButton = shouldShowEmailCapture('guestMilestone') ||
@@ -40,6 +64,20 @@ export function LandingPage() {
     trackFunnelStep('cta_click');
     trackFunnelStep('app_entry');
     navigate('/events');
+  };
+
+  // Secondary CTA handler
+  const handleSecondaryCTA = () => {
+    trackCTAClick('secondary');
+    trackAppEntry();
+    trackFunnelStep('cta_click');
+    trackFunnelStep('app_entry');
+    navigate('/events');
+  };
+
+  // Toggle FAQ item
+  const toggleFaq = (index: number) => {
+    setExpandedFaq(expandedFaq === index ? null : index);
   };
   return (
     <div className="landing-page">
@@ -135,6 +173,29 @@ export function LandingPage() {
           <button className="cta-button" onClick={handleEnterApp}>
             Start Planning Free
           </button>
+
+          {/* Trust Badges */}
+          <div className="trust-badges">
+            <div className="trust-badge">
+              <svg className="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>100% Private</span>
+            </div>
+            <div className="trust-badge">
+              <svg className="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span>No Signup</span>
+            </div>
+            <div className="trust-badge">
+              <svg className="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+              <span>Free Forever</span>
+            </div>
+          </div>
         </section>
 
         {/* Wave Divider */}
@@ -327,6 +388,14 @@ export function LandingPage() {
           </div>
         </section>
 
+        {/* Secondary CTA */}
+        <section className="secondary-cta-section">
+          <p className="secondary-cta-text">Ready to create your seating chart?</p>
+          <button className="secondary-cta-button" onClick={handleSecondaryCTA}>
+            Get Started Now
+          </button>
+        </section>
+
         {/* Coming Soon Section */}
         <section className="coming-soon-section">
           <div className="coming-soon-header">
@@ -356,6 +425,39 @@ export function LandingPage() {
                 <span className="platform-name coming-soon">Eventbrite <small>(coming soon)</small></span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="faq-section">
+          <h2 className="faq-header">Frequently Asked Questions</h2>
+          <div className="faq-list">
+            {faqItems.map((item, index) => (
+              <div
+                key={index}
+                className={`faq-item ${expandedFaq === index ? 'faq-item--expanded' : ''}`}
+              >
+                <button
+                  className="faq-question"
+                  onClick={() => toggleFaq(index)}
+                  aria-expanded={expandedFaq === index}
+                >
+                  <span>{item.question}</span>
+                  <svg
+                    className="faq-chevron"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                <div className="faq-answer">
+                  <p>{item.answer}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
