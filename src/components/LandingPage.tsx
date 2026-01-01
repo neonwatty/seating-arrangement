@@ -28,7 +28,7 @@ const faqItems = [
   },
   {
     question: 'Is Seatify really free?',
-    answer: 'Yes, 100% free! There are no hidden fees, premium tiers, or feature limits. We believe everyone deserves access to great event planning tools.',
+    answer: 'Yes! The core seating chart tools are completely free to use. Your data stays in your browser with no account required.',
   },
 ];
 
@@ -193,7 +193,7 @@ export function LandingPage() {
               <svg className="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 6L9 17l-5-5" />
               </svg>
-              <span>Free Forever</span>
+              <span>No Credit Card</span>
             </div>
           </div>
         </section>
