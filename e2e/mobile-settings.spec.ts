@@ -70,8 +70,8 @@ test.describe('Mobile Settings Section - Visibility', () => {
     await enterAppMobile(page);
     await openMobileMenu(page);
 
-    // Version should show 0.9.0
-    await expect(page.locator('.menu-item:has-text("Version 0.9.0")')).toBeAttached();
+    // Version should show current version (matches pattern like "Version 0.10.0")
+    await expect(page.locator('.menu-item').filter({ hasText: /Version \d+\.\d+\.\d+/ })).toBeAttached();
   });
 });
 

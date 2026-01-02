@@ -1,5 +1,22 @@
 [
   {
+    "version": "0.10.0",
+    "highlights": [
+      "New Share button - send your seating chart to anyone with a single click!",
+      "Better mobile experience - landscape mode, swipe gestures, and improved navigation",
+      "Interactive tours to help you learn Seatify's features quickly",
+      "Performance improvements and bug fixes for a smoother experience"
+    ]
+  },
+  {
+    "version": "0.9.0",
+    "highlights": [
+      "Shareable read-only views - let others see your seating chart without editing",
+      "QR codes for easy mobile sharing at your event",
+      "Download seating data as a file to share via email or messaging"
+    ]
+  },
+  {
     "version": "0.8.0",
     "highlights": [
       "Smart platform detection - we now recognize Zola and RSVPify exports automatically!",
