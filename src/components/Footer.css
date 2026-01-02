@@ -36,7 +36,7 @@
 }
 
 .footer-logo-seat {
-  color: var(--text-primary);
+  color: var(--color-text);
 }
 
 .footer-logo-ify {
@@ -62,7 +62,7 @@
 /* Links section */
 .footer-links {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
 }
 
@@ -172,7 +172,7 @@
   }
 
   .footer-links {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     text-align: center;
   }

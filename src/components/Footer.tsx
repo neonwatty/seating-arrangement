@@ -48,21 +48,6 @@ export function Footer({ variant = 'landing' }: FooterProps) {
               </ul>
             </div>
 
-            <div className="footer-column">
-              <h4>Contact</h4>
-              <ul>
-                <li><a href="mailto:hello@seatify.app">hello@seatify.app</a></li>
-                <li>
-                  <a
-                    href="https://github.com/neonwatty/seatify"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    GitHub
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
 
