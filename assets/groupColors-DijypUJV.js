@@ -1,0 +1,1 @@
+const c=["#7dd3fc","#86efac","#fcd34d","#f9a8d4","#a5b4fc","#fca5a5","#fdba74","#c4b5fd","#5eead4","#fde68a","#f0abfc","#93c5fd","#a3e635","#fb923c","#a78bfa","#f472b6","#22d3ee","#34d399","#facc15","#f87171"];function d(a){if(!a)return null;let f=0;for(let e=0;e<a.length;e++)f=a.charCodeAt(e)+((f<<5)-f);return c[Math.abs(f)%c.length]}export{d as g};
