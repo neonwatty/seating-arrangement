@@ -1,9 +1,38 @@
 # Changelog
 
-All notable changes to TableCraft will be documented in this file.
+All notable changes to Seatify will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.10.0] - 2026-01-02
+
+### Added
+- Share button in header - easily share your seating chart with anyone
+- User share tracking via `?ref=user-share` parameter for analytics attribution
+- UTM link generator script for marketing campaign tracking
+- Mobile landscape orientation support for better tablet/phone experience
+- Swipe-to-minimize gesture for import wizard on mobile
+- Two-layer onboarding system with focused mini-tours
+- Unified mobile bottom navigation with settings menu
+- Trust badges, secondary CTA, and FAQ section on landing page
+- Legal pages (Privacy Policy, Terms of Service) and updated footer
+- Google Ads conversion tracking with GA4-linked events
+- Funnel tracking and engagement depth analytics
+- Core Web Vitals tracking for performance monitoring
+- robots.txt and sitemap.xml for SEO
+
+### Changed
+- Rebranded from TableCraft to Seatify throughout the app
+- Footer simplified to two columns (Product, Legal) - removed Contact section
+- Footer brand logo now uses correct color variable
+- Tour text updated to be mobile-friendly
+- Free messaging updated to not promise forever-free
+
+### Fixed
+- Safari mobile viewport compatibility using 100dvh
+- Mobile tour black screen when target element not found
+- Brand color consistency in footer logo
 
 ## [0.9.0] - 2025-12-19
 
