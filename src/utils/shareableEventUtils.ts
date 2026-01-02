@@ -356,12 +356,18 @@ function validateShareableData(data: unknown): data is ShareableEventData {
 }
 
 /**
- * Generate the full shareable URL
+ * Generate the full shareable URL with optional tracking param
  */
-export function generateShareUrl(event: Event): string {
+export function generateShareUrl(event: Event, includeTracking = true): string {
   const encoded = encodeShareableUrl(event);
   const baseUrl = window.location.origin + window.location.pathname;
-  return `${baseUrl}#/share/${encoded}`;
+  const shareUrl = `${baseUrl}#/share/${encoded}`;
+
+  // Add tracking param so we can identify user-shared links in GA4
+  if (includeTracking) {
+    return `${shareUrl}?ref=user-share`;
+  }
+  return shareUrl;
 }
 
 /**

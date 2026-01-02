@@ -7,6 +7,7 @@ import {
   downloadEventDataFile,
 } from '../utils/shareableEventUtils';
 import { copyToClipboard } from '../utils/qrCodeUtils';
+import { trackShareLinkCopied, trackShareFileDownloaded } from '../utils/analytics';
 import type { Event } from '../types';
 import './ShareLinkModal.css';
 
@@ -59,6 +60,9 @@ export function ShareLinkModal({ isOpen, onClose, event }: ShareLinkModalProps) 
     };
   }, [isOpen, onClose]);
 
+  const guestCount = event.guests.filter(g => g.rsvpStatus !== 'declined').length;
+  const tableCount = event.tables.length;
+
   if (!isOpen) return null;
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -71,16 +75,15 @@ export function ShareLinkModal({ isOpen, onClose, event }: ShareLinkModalProps) 
     const success = await copyToClipboard(shareUrl);
     if (success) {
       setCopied(true);
+      trackShareLinkCopied(guestCount, tableCount);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const handleDownloadFile = () => {
     downloadEventDataFile(event);
+    trackShareFileDownloaded(guestCount, tableCount);
   };
-
-  const guestCount = event.guests.filter(g => g.rsvpStatus !== 'declined').length;
-  const tableCount = event.tables.length;
 
   return (
     <div className="share-modal-overlay" onClick={handleOverlayClick}>

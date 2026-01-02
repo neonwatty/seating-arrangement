@@ -145,6 +145,38 @@ export function trackShareAction(shareType: 'link' | 'qr' | 'clipboard'): void {
   });
 }
 
+/**
+ * Track when user opens the share modal
+ */
+export function trackShareModalOpened(source: 'header' | 'dashboard' | 'toolbar'): void {
+  trackEvent('share_modal_opened', {
+    event_category: 'engagement',
+    share_source: source,
+  });
+}
+
+/**
+ * Track when user copies a share link
+ */
+export function trackShareLinkCopied(guestCount: number, tableCount: number): void {
+  trackEvent('share_link_copied', {
+    event_category: 'engagement',
+    guest_count: guestCount,
+    table_count: tableCount,
+  });
+}
+
+/**
+ * Track when user downloads share file
+ */
+export function trackShareFileDownloaded(guestCount: number, tableCount: number): void {
+  trackEvent('share_file_downloaded', {
+    event_category: 'engagement',
+    guest_count: guestCount,
+    table_count: tableCount,
+  });
+}
+
 // ============================================
 // Conversion Tracking (via GA4-linked events)
 // ============================================

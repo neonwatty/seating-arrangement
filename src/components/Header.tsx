@@ -5,11 +5,13 @@ import { useStore } from '../store/useStore';
 import { version } from '../../package.json';
 import { UpdatesButton } from './UpdatesPopup';
 import { EmailCaptureModal } from './EmailCaptureModal';
+import { ShareLinkModal } from './ShareLinkModal';
 import {
   shouldShowEmailCapture,
   markAsSubscribed,
   trackDismissal,
 } from '../utils/emailCaptureManager';
+import { trackShareModalOpened } from '../utils/analytics';
 import { getToursByCategory, type TourId } from '../data/tourRegistry';
 import './Header.css';
 
@@ -24,6 +26,7 @@ export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
   const { eventId } = useParams<{ eventId?: string }>();
   const { event, setEventName, theme, cycleTheme, currentEventId, isTourComplete } = useStore();
   const [showEmailCapture, setShowEmailCapture] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [showLearnDropdown, setShowLearnDropdown] = useState(false);
   const learnDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -58,8 +61,16 @@ export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
     setShowEmailCapture(false);
   };
 
+  const handleOpenShare = () => {
+    trackShareModalOpened('header');
+    setShowShareModal(true);
+  };
+
   // Check if we're inside an event (has eventId in URL)
   const isInsideEvent = !!eventId || (currentEventId && window.location.hash.includes('/events/'));
+
+  // Check if event has content worth sharing
+  const canShare = isInsideEvent && (event.guests.length > 0 || event.tables.length > 0);
 
   // Apply theme to document
   useEffect(() => {
@@ -187,6 +198,20 @@ export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
             ?
           </button>
         )}
+        {canShare && (
+          <button
+            className="share-btn"
+            onClick={handleOpenShare}
+            title="Share seating chart"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+            <span className="share-btn-text">Share</span>
+          </button>
+        )}
         <button
           className="theme-btn"
           onClick={cycleTheme}
@@ -210,6 +235,14 @@ export function Header({ onLogoClick, onShowHelp, onStartTour }: HeaderProps) {
           onClose={() => handleEmailCaptureClose(false)}
           onSuccess={() => handleEmailCaptureClose(true)}
           source="value_moment"
+        />,
+        document.body
+      )}
+      {showShareModal && createPortal(
+        <ShareLinkModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          event={event}
         />,
         document.body
       )}
