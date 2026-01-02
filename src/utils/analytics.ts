@@ -37,11 +37,14 @@ export function trackPageView(pagePath: string, pageTitle?: string): void {
 
 /**
  * Track when a user creates a new event
+ * Conversion value: $100 (highest value - user committed to planning)
  */
 export function trackEventCreated(eventType: string): void {
   trackEvent('event_created', {
-    event_category: 'engagement',
+    event_category: 'conversion',
     event_type: eventType,
+    value: 100,
+    currency: 'USD',
   });
 }
 
@@ -88,21 +91,27 @@ export function trackQRGenerated(type: 'share' | 'table'): void {
 
 /**
  * Track when a PDF is exported
+ * Conversion value: $60 (high value - user producing deliverable)
  */
 export function trackPDFExported(exportType: string): void {
   trackEvent('pdf_exported', {
-    event_category: 'engagement',
+    event_category: 'conversion',
     export_type: exportType,
+    value: 60,
+    currency: 'USD',
   });
 }
 
 /**
  * Track email signup (conversion event)
+ * Conversion value: $25 (lead captured for nurturing)
  */
 export function trackEmailSignup(source: string): void {
   trackEvent('email_signup', {
     event_category: 'conversion',
     signup_source: source,
+    value: 25,
+    currency: 'USD',
   });
 }
 
@@ -118,20 +127,26 @@ export function trackCTAClick(ctaLocation: string): void {
 
 /**
  * Track when user enters the app from landing page
+ * Conversion value: $50 (primary conversion - user started using product)
  */
 export function trackAppEntry(): void {
   trackEvent('app_entry', {
-    event_category: 'engagement',
+    event_category: 'conversion',
+    value: 50,
+    currency: 'USD',
   });
 }
 
 /**
  * Track when user imports guests
+ * Conversion value: $75 (high engagement - imported guest list)
  */
 export function trackGuestsImported(count: number): void {
   trackEvent('guests_imported', {
-    event_category: 'engagement',
+    event_category: 'conversion',
     guest_count: count,
+    value: 75,
+    currency: 'USD',
   });
 }
 
@@ -157,23 +172,29 @@ export function trackShareModalOpened(source: 'header' | 'dashboard' | 'toolbar'
 
 /**
  * Track when user copies a share link
+ * Conversion value: $40 (user sharing their work - viral potential)
  */
 export function trackShareLinkCopied(guestCount: number, tableCount: number): void {
   trackEvent('share_link_copied', {
-    event_category: 'engagement',
+    event_category: 'conversion',
     guest_count: guestCount,
     table_count: tableCount,
+    value: 40,
+    currency: 'USD',
   });
 }
 
 /**
  * Track when user downloads share file
+ * Conversion value: $40 (user exporting their work - high commitment)
  */
 export function trackShareFileDownloaded(guestCount: number, tableCount: number): void {
   trackEvent('share_file_downloaded', {
-    event_category: 'engagement',
+    event_category: 'conversion',
     guest_count: guestCount,
     table_count: tableCount,
+    value: 40,
+    currency: 'USD',
   });
 }
 
