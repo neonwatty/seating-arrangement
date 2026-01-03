@@ -166,25 +166,25 @@ test.describe('Share Modal', () => {
 
 test.describe('Shareable View Page', () => {
   test('navigating to /share shows upload prompt', async ({ page }) => {
-    await page.goto('/#/share');
+    await page.goto('/share');
     await expect(page.locator('.shareable-upload-prompt')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('.shareable-upload-prompt h2')).toContainText('View Shared Seating Chart');
   });
 
   test('/share page has upload button', async ({ page }) => {
-    await page.goto('/#/share');
+    await page.goto('/share');
     await expect(page.locator('.upload-btn')).toBeVisible();
     await expect(page.locator('.upload-btn')).toContainText('Upload Seating File');
   });
 
   test('/share page has create your own link', async ({ page }) => {
-    await page.goto('/#/share');
+    await page.goto('/share');
     await expect(page.locator('.secondary-btn')).toBeVisible();
     await expect(page.locator('.secondary-btn')).toContainText('create your own event');
   });
 
   test('clicking create your own navigates to events', async ({ page }) => {
-    await page.goto('/#/share');
+    await page.goto('/share');
     await page.locator('.secondary-btn').click();
     // Should navigate to events page
     await expect(page).toHaveURL(/\/#\/events/);
@@ -192,19 +192,19 @@ test.describe('Shareable View Page', () => {
 
   test('invalid share URL shows error state', async ({ page }) => {
     // Navigate to share URL with invalid data
-    await page.goto('/#/share/invaliddata123');
+    await page.goto('/share/invaliddata123');
     await expect(page.locator('.shareable-error')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('.shareable-error h2')).toContainText('Unable to load seating chart');
   });
 
   test('error page has upload fallback option', async ({ page }) => {
-    await page.goto('/#/share/invaliddata123');
+    await page.goto('/share/invaliddata123');
     await expect(page.locator('.upload-btn')).toBeVisible();
     await expect(page.locator('.upload-btn')).toContainText('Upload a file instead');
   });
 
   test('error page has go to app button', async ({ page }) => {
-    await page.goto('/#/share/invaliddata123');
+    await page.goto('/share/invaliddata123');
     await expect(page.locator('.secondary-btn')).toBeVisible();
     await expect(page.locator('.secondary-btn')).toContainText('Go to Seatify');
   });

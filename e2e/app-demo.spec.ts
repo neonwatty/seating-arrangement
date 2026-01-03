@@ -238,7 +238,7 @@ test.describe('Header Subscribe Button', () => {
     }, { subscribed });
     await page.goto('/');
     await page.click('button:has-text("Start Planning Free")');
-    await page.waitForURL(/\/#\/events/);
+    await page.waitForURL(/\/events$/);
     await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
     // Wait for any animations/transitions to complete
     await page.waitForTimeout(500);
