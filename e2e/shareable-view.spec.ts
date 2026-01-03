@@ -187,7 +187,7 @@ test.describe('Shareable View Page', () => {
     await page.goto('/share');
     await page.locator('.secondary-btn').click();
     // Should navigate to events page
-    await expect(page).toHaveURL(/\/#\/events/);
+    await expect(page).toHaveURL(/\/events$/);
   });
 
   test('invalid share URL shows error state', async ({ page }) => {
