@@ -5,8 +5,9 @@ import * as path from 'path';
 const SCREENSHOTS_DIR = 'storyboards/screenshots';
 const BASE_URL = 'http://localhost:5173/seating-arrangement';
 
-// Demo data to inject into localStorage
-const DEMO_EVENT = {
+// Demo data for future use when injecting into localStorage
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _DEMO_EVENT = {
   id: 'demo-event',
   name: "Sarah & John's Wedding",
   type: 'wedding',
@@ -78,7 +79,7 @@ async function captureScreenshots() {
         await page.click('body', { position: { x: 10, y: 10 }, force: true });
         await page.waitForTimeout(300);
       }
-    } catch (e) {
+    } catch {
       // Ignore errors, onboarding might not be present
     }
   };
@@ -94,7 +95,7 @@ async function captureScreenshots() {
     await captureScreenshot(page, '01-create-event-dialog.png', 'Create event dialog');
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
-  } catch (e) {
+  } catch {
     console.log('  (Create Event button not found, skipping)');
   }
 
@@ -118,7 +119,7 @@ async function captureScreenshots() {
     await page.waitForTimeout(500);
     await dismissOnboarding();
     await captureScreenshot(page, '01-dashboard.png', 'Dashboard view');
-  } catch (e) {
+  } catch {
     console.log('  (Dashboard not found)');
   }
 
@@ -129,7 +130,7 @@ async function captureScreenshots() {
     await page.waitForTimeout(500);
     await dismissOnboarding();
     await captureScreenshot(page, '03-guests-view.png', 'Guests view');
-  } catch (e) {
+  } catch {
     console.log('  (Guests not found)');
   }
 
@@ -138,11 +139,11 @@ async function captureScreenshots() {
     await dismissOnboarding();
     await page.click('text=Canvas', { timeout: 2000, force: true });
     await page.waitForTimeout(500);
-  } catch (e) {
+  } catch {
     try {
       await page.click('text=Floor Plan', { timeout: 2000, force: true });
       await page.waitForTimeout(500);
-    } catch (e2) {
+    } catch {
       console.log('  (Canvas/Floor Plan not found)');
     }
   }
