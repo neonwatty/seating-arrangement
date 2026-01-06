@@ -7,6 +7,17 @@ async function enterApp(page: import('@playwright/test').Page) {
   await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
 }
 
+// Helper to enter app and navigate to canvas view (where auto-start wizard triggers)
+async function enterAppAndGoToCanvas(page: import('@playwright/test').Page) {
+  await page.goto('/');
+  await page.click('button:has-text("Start Planning Free")');
+  await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+
+  // Click on the first event card to go to canvas view
+  await page.locator('.event-card').first().click();
+  await page.waitForURL(/\/canvas$/);
+}
+
 // Helper to clear localStorage and ensure fresh state
 async function clearStorageAndReload(page: import('@playwright/test').Page) {
   await page.goto('/');
@@ -19,7 +30,8 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('wizard auto-shows for first-time users after entering app', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    // Auto-start wizard only triggers on canvas view
+    await enterAppAndGoToCanvas(page);
 
     // Wizard should appear after a short delay
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
@@ -29,8 +41,8 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('wizard does not auto-show for returning users who completed it', async ({ page }) => {
-    // First, complete the wizard
-    await page.click('button:has-text("Start Planning Free")');
+    // First, complete the wizard (auto-start triggers on canvas view)
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Skip through all steps
@@ -40,11 +52,12 @@ test.describe('Onboarding Wizard', () => {
     // Wizard should close
     await expect(page.locator('.onboarding-tooltip')).not.toBeVisible();
 
-    // Reload and re-enter - navigate to root first to clear hash route
+    // Reload and re-enter canvas view again
     await page.goto('/');
-    await page.click('button:has-text("Start Planning Free")');
-    await page.waitForURL(/\/events$/);
-    await expect(page.locator('.header')).toBeVisible({ timeout: 5000 });
+    await page.evaluate(() => {
+      // Don't clear localStorage - we want to test that completed state persists
+    });
+    await enterAppAndGoToCanvas(page);
 
     // Wait a moment to ensure wizard doesn't appear
     await page.waitForTimeout(1000);
@@ -52,7 +65,7 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('can navigate through wizard steps using Next button', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Step 1: Welcome
@@ -66,7 +79,7 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('can go back to previous steps', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Go to step 2
@@ -79,7 +92,7 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('skip button closes wizard', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     await page.click('.onboarding-btn--skip');
@@ -87,7 +100,7 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('completing wizard shows success toast', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Click through all steps to the end (QUICK_START_STEPS has 6 steps)
@@ -112,7 +125,7 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('progress dots show current step', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // First dot should be active
@@ -131,8 +144,8 @@ test.describe('Onboarding Wizard', () => {
     if (testInfo.project.name.includes('Mobile')) {
       test.skip(true, 'Learn menu is in hamburger menu on mobile, not in header');
     }
-    // First complete the wizard
-    await page.click('button:has-text("Start Planning Free")');
+    // First complete the wizard (auto-start triggers on canvas view)
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
     await page.click('.onboarding-btn--skip');
     await expect(page.locator('.onboarding-tooltip')).not.toBeVisible();
@@ -167,7 +180,7 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('Escape key closes wizard', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     await page.keyboard.press('Escape');
@@ -175,7 +188,7 @@ test.describe('Onboarding Wizard', () => {
   });
 
   test('Arrow keys navigate wizard steps', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Arrow Right goes to next step
@@ -202,7 +215,7 @@ test.describe('Onboarding Wizard - Spotlight', () => {
       return;
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Go to step with spotlight (step 3: Add Tables has placement 'bottom')
@@ -222,7 +235,7 @@ test.describe('Onboarding Wizard - Spotlight', () => {
   });
 
   test('welcome step has no spotlight (center placement)', async ({ page }) => {
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Welcome step should not have spotlight ring
@@ -242,7 +255,7 @@ test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
       test.skip(true, 'Drag handle is only visible on mobile');
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Drag handle should be visible on mobile
@@ -256,7 +269,7 @@ test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
       test.skip(true, 'Test is for desktop behavior');
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Drag handle should be hidden on desktop
@@ -269,7 +282,7 @@ test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
       test.skip(true, 'Swipe-to-minimize is only available on mobile');
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Get the drag handle position for swipe simulation
@@ -303,7 +316,7 @@ test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
       test.skip(true, 'Pill is only available on mobile');
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Minimize via swipe on drag handle
@@ -338,7 +351,7 @@ test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
       test.skip(true, 'This test is for mobile minimize behavior');
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Minimize via swipe on drag handle
@@ -373,7 +386,7 @@ test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
       test.skip(true, 'Pill is only available on mobile');
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Navigate to step 2
@@ -404,7 +417,7 @@ test.describe('Onboarding Wizard - Mobile Minimize/Expand', () => {
       test.skip(true, 'This test is for mobile minimize behavior');
     }
 
-    await page.click('button:has-text("Start Planning Free")');
+    await enterAppAndGoToCanvas(page);
     await expect(page.locator('.onboarding-tooltip')).toBeVisible({ timeout: 3000 });
 
     // Minimize via swipe on drag handle
