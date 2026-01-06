@@ -24,7 +24,7 @@ interface MainToolbarProps {
 }
 
 export function MainToolbar({ children, onAddGuest, onImport, showRelationships, onToggleRelationships, onShowHelp, onStartTour, onSubscribe, canShowEmailButton }: MainToolbarProps) {
-  const { event, addTable, addGuest, activeView, optimizeSeating, resetSeating, hasOptimizationSnapshot } = useStore();
+  const { event, addTable, addGuest, activeView, optimizeSeating, resetSeating, hasOptimizationSnapshot, hasUsedOptimizeButton } = useStore();
   const isMobile = useIsMobile();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -35,6 +35,9 @@ export function MainToolbar({ children, onAddGuest, onImport, showRelationships,
   const hasTablesWithCapacity = event.tables.some(t => t.capacity > 0);
   const canOptimize = hasRelationships && hasTablesWithCapacity && event.guests.length > 1;
   const hasSnapshot = hasOptimizationSnapshot();
+
+  // Show attention animation if user hasn't used optimize button yet and can optimize
+  const showOptimizeAttention = canOptimize && !hasUsedOptimizeButton && !hasSnapshot;
 
   // Debug logging
   console.log('Optimization state:', {
@@ -192,10 +195,11 @@ export function MainToolbar({ children, onAddGuest, onImport, showRelationships,
           ) : (
             <button
               onClick={handleOptimize}
-              className={`toolbar-btn optimize ${isOptimizing ? 'optimizing' : ''}`}
+              className={`toolbar-btn optimize ${isOptimizing ? 'optimizing' : ''} ${showOptimizeAttention ? 'attention' : ''}`}
               disabled={!canOptimize || isOptimizing}
               title={!canOptimize ? 'Add guest relationships to enable optimization' : 'Optimize seating based on relationships'}
             >
+              {showOptimizeAttention && <span className="optimize-badge">Try</span>}
               <span className="btn-icon">✨</span>
               {!isMobile && <span className="btn-text">{isOptimizing ? 'Optimizing...' : 'Optimize'}</span>}
             </button>

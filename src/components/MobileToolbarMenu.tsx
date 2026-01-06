@@ -36,7 +36,7 @@ export function MobileToolbarMenu({
   onSubscribe,
   canShowEmailButton,
 }: MobileToolbarMenuProps) {
-  const { event, addTable, activeView, setActiveView, optimizeSeating, resetSeating, hasOptimizationSnapshot, canvas, setZoom, recenterCanvas, theme, cycleTheme, currentEventId, isTourComplete } = useStore();
+  const { event, addTable, activeView, setActiveView, optimizeSeating, resetSeating, hasOptimizationSnapshot, hasUsedOptimizeButton, canvas, setZoom, recenterCanvas, theme, cycleTheme, currentEventId, isTourComplete } = useStore();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [showTableSubmenu, setShowTableSubmenu] = useState(false);
@@ -53,6 +53,9 @@ export function MobileToolbarMenu({
   const hasTablesWithCapacity = event.tables.some(t => t.capacity > 0);
   const canOptimize = hasRelationships && hasTablesWithCapacity && event.guests.length > 1;
   const hasSnapshot = hasOptimizationSnapshot();
+
+  // Show attention animation if user hasn't used optimize button yet and can optimize
+  const showOptimizeAttention = canOptimize && !hasUsedOptimizeButton && !hasSnapshot;
 
   // Close menu when clicking outside (check both bottom nav and menu sheet)
   useEffect(() => {
@@ -342,13 +345,14 @@ export function MobileToolbarMenu({
                   </button>
                 ) : (
                   <button
-                    className="menu-item"
+                    className={`menu-item ${showOptimizeAttention ? 'attention' : ''}`}
                     onClick={handleOptimize}
                     disabled={!canOptimize}
                     role="menuitem"
                   >
                     <span className="menu-icon">✨</span>
                     <span>Optimize Seating</span>
+                    {showOptimizeAttention && <span className="attention-badge">Try</span>}
                   </button>
                 )
               )}

@@ -94,6 +94,7 @@ interface OnboardingState {
   activeTourId: TourId | null;
   hasSeenImmersiveHint: boolean;
   hasSeenLandscapeHint: boolean;
+  hasUsedOptimizeButton: boolean;
   setOnboardingComplete: () => void;
   resetOnboarding: () => void;
   markTourComplete: (tourId: TourId) => void;
@@ -280,6 +281,7 @@ interface AppState extends OnboardingState {
   exportEvent: () => string;
   importEvent: (json: string) => void;
   loadDemoData: () => void;
+  createDemoEvent: () => string;
 
   // Computed - Constraint Violations
   getViolations: () => ConstraintViolation[];
@@ -669,6 +671,7 @@ export const useStore = create<AppState>()(
       activeTourId: null,
       hasSeenImmersiveHint: false,
       hasSeenLandscapeHint: false,
+      hasUsedOptimizeButton: false,
 
       // Onboarding actions
       setOnboardingComplete: () => set({ hasCompletedOnboarding: true }),
@@ -1870,6 +1873,37 @@ export const useStore = create<AppState>()(
         });
       },
 
+      createDemoEvent: () => {
+        const state = get();
+        if (state.events.length >= MAX_EVENTS) {
+          console.warn('Maximum events limit reached');
+          return state.events[0]?.id || '';
+        }
+        // Create a demo event using the rich default event data
+        const demoEvent = createDefaultEvent();
+        // Override the name to clearly indicate it's a demo
+        demoEvent.name = 'Demo Event';
+
+        set({
+          events: [...state.events, demoEvent],
+          currentEventId: demoEvent.id,
+          event: demoEvent,
+          // Reset canvas state for new event with good initial view
+          canvas: {
+            zoom: 1.25,
+            panX: 50,
+            panY: 20,
+            selectedTableIds: [],
+            selectedGuestIds: [],
+            selectedVenueElementId: null,
+          },
+          // Clear history for new event
+          history: [],
+          historyIndex: -1,
+        });
+        return demoEvent.id;
+      },
+
       // Constraint Violations
       getViolations: () => detectConstraintViolations(get().event),
 
@@ -2055,6 +2089,7 @@ export const useStore = create<AppState>()(
           })),
           animatingGuestIds: new Set(movedGuests),
           preOptimizationSnapshot: snapshot,
+          hasUsedOptimizeButton: true,
         }));
 
         const afterScore = get().calculateSeatingScore();
@@ -2109,13 +2144,14 @@ export const useStore = create<AppState>()(
     },
     {
       name: 'seating-arrangement-storage',
-      version: 12, // Increment for tour tracking
+      version: 13, // Increment for single-event consolidation
       partialize: (state) => ({
         events: state.events,
         currentEventId: state.currentEventId,
         theme: state.theme,
         eventListViewMode: state.eventListViewMode,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
+        hasUsedOptimizeButton: state.hasUsedOptimizeButton,
         // Serialize Set as array for persistence
         completedTours: Array.from(state.completedTours),
       }),
@@ -2194,6 +2230,19 @@ export const useStore = create<AppState>()(
         if (version < 12) {
           if (!state.completedTours) {
             state.completedTours = [];
+          }
+        }
+
+        // Migration for v12 → v13: consolidate to single event
+        if (version < 13) {
+          if (state?.events && state.events.length > 1) {
+            // Keep only the current event, or the first event if no current
+            const currentEvent = state.currentEventId
+              ? state.events.find((e: { id: string }) => e.id === state.currentEventId)
+              : null;
+            const eventToKeep = currentEvent || state.events[0];
+            state.events = [eventToKeep];
+            state.currentEventId = eventToKeep.id;
           }
         }
 

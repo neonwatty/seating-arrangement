@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useGesture } from '@use-gesture/react';
 import { useStore } from '../store/useStore';
 import { ONBOARDING_STEPS, type OnboardingStep } from '../data/onboardingSteps';
-import { trackOnboardingStep } from '../utils/analytics';
+import { trackOnboardingStep, trackTourSkipped, trackTourRemindLater } from '../utils/analytics';
+import { showToast } from './toastStore';
 import './OnboardingWizard.css';
 
 // Gesture thresholds for swipe-to-minimize
@@ -31,9 +32,11 @@ interface OnboardingWizardProps {
   onComplete: () => void;
   customSteps?: OnboardingStep[];  // Optional custom steps for mini-tours
   tourTitle?: string;              // Optional title shown in progress area
+  tourId?: string;                 // Optional tour ID for analytics
+  isAutoStarted?: boolean;         // Whether this tour was auto-started (enables Remind Me Later)
 }
 
-export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: OnboardingWizardProps) {
+export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps, tourId, isAutoStarted }: OnboardingWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
@@ -228,8 +231,25 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
   }, [onComplete, onClose, steps.length]);
 
   const handleSkip = useCallback(() => {
+    // Track skip analytics
+    if (tourId) {
+      trackTourSkipped(tourId, currentStepIndex, steps.length);
+    }
+    // Show helpful toast message
+    showToast('Tour dismissed. Find it in the Learn menu anytime.', 'info');
     onClose();
-  }, [onClose]);
+  }, [onClose, tourId, currentStepIndex, steps.length]);
+
+  const handleRemindLater = useCallback(() => {
+    // Set session flag to delay tour until next session
+    sessionStorage.setItem('tourRemindLater', 'true');
+    // Track analytics
+    if (tourId) {
+      trackTourRemindLater(tourId);
+    }
+    showToast('No problem! The tour will show again next time.', 'info');
+    onClose();
+  }, [onClose, tourId]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -580,9 +600,16 @@ export function OnboardingWizard({ isOpen, onClose, onComplete, customSteps }: O
                 Back
               </button>
             )}
-            <button className="onboarding-btn onboarding-btn--skip" onClick={handleSkip}>
-              Skip
-            </button>
+            {/* Show "Remind Me Later" only on first step of auto-started tours */}
+            {isFirstStep && isAutoStarted ? (
+              <button className="onboarding-btn onboarding-btn--later" onClick={handleRemindLater}>
+                Later
+              </button>
+            ) : (
+              <button className="onboarding-btn onboarding-btn--skip" onClick={handleSkip}>
+                Skip
+              </button>
+            )}
             <button
               className="onboarding-btn onboarding-btn--next"
               onClick={() => {

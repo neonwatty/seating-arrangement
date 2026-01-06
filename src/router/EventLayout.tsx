@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Outlet, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store/useStore';
@@ -11,6 +11,7 @@ import { MobileMenuProvider, useMobileMenu } from '../contexts/MobileMenuContext
 import { TOUR_REGISTRY, type TourId } from '../data/tourRegistry';
 import { QUICK_START_STEPS } from '../data/onboardingSteps';
 import { useIsMobile } from '../hooks/useResponsive';
+import { trackTourAutoStarted } from '../utils/analytics';
 
 /**
  * Layout wrapper for event-related routes.
@@ -23,6 +24,8 @@ export function EventLayout() {
   const { eventId } = useParams<{ eventId?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const hasAutoStartedTourRef = useRef(false);
 
   const {
     events,
@@ -40,6 +43,7 @@ export function EventLayout() {
 
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isAutoStartedTour, setIsAutoStartedTour] = useState(false);
 
   // Get current tour steps based on active tour
   const currentTourSteps = activeTourId ? TOUR_REGISTRY[activeTourId]?.steps : QUICK_START_STEPS;
@@ -48,6 +52,9 @@ export function EventLayout() {
   const startTour = useCallback((tourId: TourId) => {
     const tour = TOUR_REGISTRY[tourId];
     if (!tour) return;
+
+    // Clear auto-started flag since this is a manual start
+    setIsAutoStartedTour(false);
 
     // Navigate to the required view if needed (both URL and state)
     if (tour.startingView && tour.startingView !== 'event-list') {
@@ -145,15 +152,51 @@ export function EventLayout() {
   }, [startTour]);
 
   // Auto-show Quick Start tour for first-time users
+  // Only triggers when:
+  // 1. User hasn't completed onboarding
+  // 2. User is on canvas view (not event list)
+  // 3. No pending tour from landing page
+  // 4. Haven't already auto-started this session
   useEffect(() => {
-    if (!hasCompletedOnboarding) {
-      const timer = setTimeout(() => {
-        setActiveTour('quick-start');
-        setShowOnboarding(true);
-      }, 500);
-      return () => clearTimeout(timer);
+    // Skip if already completed onboarding or already auto-started this session
+    if (hasCompletedOnboarding || hasAutoStartedTourRef.current) {
+      return;
     }
-  }, [hasCompletedOnboarding, setActiveTour]);
+
+    // Only auto-start on canvas view (the Quick Start tour expects canvas)
+    const isCanvasView = location.pathname.endsWith('/canvas');
+    if (!isCanvasView) {
+      return;
+    }
+
+    // Don't override pending tours from landing page deep-links
+    const hasPendingTour = sessionStorage.getItem('pendingTour');
+    if (hasPendingTour) {
+      return;
+    }
+
+    // Check for "remind me later" session flag
+    const remindLater = sessionStorage.getItem('tourRemindLater');
+    if (remindLater) {
+      return;
+    }
+
+    // Mark as auto-started to prevent multiple triggers
+    hasAutoStartedTourRef.current = true;
+
+    // Use longer delay on mobile (1000ms) vs desktop (600ms)
+    // to let the canvas fully render
+    const delay = isMobile ? 1000 : 600;
+
+    const timer = setTimeout(() => {
+      trackTourAutoStarted('quick-start');
+      setActiveTour('quick-start');
+      setIsAutoStartedTour(true);
+      setShowOnboarding(true);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [hasCompletedOnboarding, location.pathname, isMobile, setActiveTour]);
 
   const handleLogoClick = () => {
     navigate('/');
@@ -180,6 +223,7 @@ export function EventLayout() {
         markTourComplete={markTourComplete}
         startTour={startTour}
         location={location}
+        isAutoStartedTour={isAutoStartedTour}
       />
     </MobileMenuProvider>
   );
@@ -202,6 +246,7 @@ function EventLayoutContent({
   markTourComplete,
   startTour,
   location,
+  isAutoStartedTour,
 }: {
   handleLogoClick: () => void;
   setShowShortcutsHelp: (show: boolean) => void;
@@ -218,6 +263,7 @@ function EventLayoutContent({
   markTourComplete: (tourId: TourId) => void;
   startTour: (tourId: TourId) => void;
   location: { pathname: string };
+  isAutoStartedTour: boolean;
 }) {
   const { showEmailCapture, handleEmailCaptureClose } = useMobileMenu();
   const isMobile = useIsMobile();
@@ -341,6 +387,8 @@ function EventLayoutContent({
         }}
         customSteps={currentTourSteps}
         tourTitle={activeTourId ? TOUR_REGISTRY[activeTourId]?.title : undefined}
+        tourId={activeTourId || undefined}
+        isAutoStarted={isAutoStartedTour}
       />
 
       {/* Email Capture Modal (triggered from mobile menu) */}

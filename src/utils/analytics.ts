@@ -148,6 +148,20 @@ export function trackCTAClick(ctaLocation: string): void {
 }
 
 /**
+ * Track when demo event is loaded
+ * Conversion value: $30 (user exploring product functionality)
+ */
+export function trackDemoLoaded(source: 'landing' | 'events_empty' | 'events_list'): void {
+  trackEvent('demo_loaded', {
+    event_category: 'conversion',
+    source: source,
+    value: 30,
+    currency: 'USD',
+    ...getUtmAttributionParams(),
+  });
+}
+
+/**
  * Track when user enters the app from landing page
  * Conversion value: $50 (primary conversion - user started using product)
  */
@@ -339,6 +353,38 @@ export function trackOnboardingStep(
     step_number: step,
     total_steps: totalSteps,
     is_completed: completed,
+  });
+}
+
+/**
+ * Track when a tour auto-starts for new users
+ */
+export function trackTourAutoStarted(tourId: string): void {
+  trackEvent('tour_auto_started', {
+    event_category: 'onboarding',
+    tour_id: tourId,
+  });
+}
+
+/**
+ * Track when a user skips/dismisses a tour
+ */
+export function trackTourSkipped(tourId: string, stepIndex: number, totalSteps: number): void {
+  trackEvent('tour_skipped', {
+    event_category: 'onboarding',
+    tour_id: tourId,
+    step_skipped_at: stepIndex,
+    total_steps: totalSteps,
+  });
+}
+
+/**
+ * Track when user chooses "Remind Me Later" on tour
+ */
+export function trackTourRemindLater(tourId: string): void {
+  trackEvent('tour_remind_later', {
+    event_category: 'onboarding',
+    tour_id: tourId,
   });
 }
 
