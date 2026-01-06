@@ -201,6 +201,7 @@ export function MainToolbar({ children, onAddGuest, onImport, showRelationships,
             </button>
           )
         )}
+
       </div>
 
       {/* Middle: View-specific controls */}

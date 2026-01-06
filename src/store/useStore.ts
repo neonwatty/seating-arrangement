@@ -344,7 +344,7 @@ const createDefaultEvent = (): Event => {
       },
     ],
     guests: [
-      // Table 1 guests (4 of 8) - Family
+      // Table 1 guests (2 of 8) - Partners separated for demo optimization
       {
         id: 'demo-guest-1', firstName: 'Emma', lastName: 'Wilson', tableId: table1Id, rsvpStatus: 'confirmed', group: 'Family',
         relationships: [
@@ -355,7 +355,7 @@ const createDefaultEvent = (): Event => {
         interests: ['golf', 'wine tasting', 'travel'], email: 'emma@wilson-law.com'
       },
       {
-        id: 'demo-guest-2', firstName: 'James', lastName: 'Wilson', tableId: table1Id, rsvpStatus: 'confirmed', group: 'Family',
+        id: 'demo-guest-2', firstName: 'James', lastName: 'Wilson', rsvpStatus: 'confirmed', group: 'Family',
         relationships: [
           { guestId: 'demo-guest-1', type: 'partner', strength: 5 },
         ],
@@ -363,7 +363,7 @@ const createDefaultEvent = (): Event => {
         interests: ['sailing', 'classical music'], email: 'james.wilson@cityhospital.org'
       },
       {
-        id: 'demo-guest-3', firstName: 'Olivia', lastName: 'Chen', tableId: table1Id, rsvpStatus: 'confirmed', group: 'Friends',
+        id: 'demo-guest-3', firstName: 'Olivia', lastName: 'Chen', rsvpStatus: 'confirmed', group: 'Friends',
         relationships: [
           { guestId: 'demo-guest-4', type: 'partner', strength: 5 },
           { guestId: 'demo-guest-7', type: 'friend', strength: 3 },
@@ -379,9 +379,9 @@ const createDefaultEvent = (): Event => {
         company: 'Stripe', jobTitle: 'Software Engineer', industry: 'Technology',
         interests: ['cycling', 'board games', 'coffee'], email: 'liam@stripe.com'
       },
-      // Table 2 guests (6 of 10) - Work colleagues - NOTE: Sophia is separated from partner Noah for demo
+      // Unassigned Work colleague - separated from partner Noah for demo optimization
       {
-        id: 'demo-guest-5', firstName: 'Sophia', lastName: 'Martinez', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Work',
+        id: 'demo-guest-5', firstName: 'Sophia', lastName: 'Martinez', rsvpStatus: 'confirmed', group: 'Work',
         relationships: [
           { guestId: 'demo-guest-6', type: 'partner', strength: 5 },
           { guestId: 'demo-guest-12', type: 'colleague', strength: 2 },
@@ -418,7 +418,7 @@ const createDefaultEvent = (): Event => {
         interests: ['running', 'art collecting'], email: 'mason.lee@gs.com'
       },
       {
-        id: 'demo-guest-9', firstName: 'Isabella', lastName: 'Brown', tableId: table2Id, rsvpStatus: 'pending',
+        id: 'demo-guest-9', firstName: 'Isabella', lastName: 'Brown', rsvpStatus: 'pending',
         relationships: [
           { guestId: 'demo-guest-10', type: 'avoid', strength: 5 },
         ],
@@ -434,7 +434,7 @@ const createDefaultEvent = (): Event => {
         company: 'Stanford University', jobTitle: 'Professor', industry: 'Education',
         interests: ['research', 'chess', 'history'], email: 'edavis@stanford.edu'
       },
-      // Table 3 guests (8 of 8)
+      // Table 3 guests (5 of 8) - Partners separated for demo optimization
       {
         id: 'demo-guest-11', firstName: 'Mia', lastName: 'Thompson', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Friends',
         relationships: [
@@ -445,7 +445,7 @@ const createDefaultEvent = (): Event => {
         interests: ['music', 'machine learning', 'skiing'], email: 'mia.t@spotify.com'
       },
       {
-        id: 'demo-guest-12', firstName: 'Lucas', lastName: 'Garcia', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Work',
+        id: 'demo-guest-12', firstName: 'Lucas', lastName: 'Garcia', rsvpStatus: 'confirmed', group: 'Work',
         relationships: [
           { guestId: 'demo-guest-5', type: 'colleague', strength: 2 },
           { guestId: 'demo-guest-6', type: 'colleague', strength: 2 },
@@ -455,7 +455,7 @@ const createDefaultEvent = (): Event => {
         interests: ['electric vehicles', 'robotics', 'camping'], email: 'lgarcia@tesla.com'
       },
       {
-        id: 'demo-guest-13', firstName: 'Charlotte', lastName: 'White', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Family',
+        id: 'demo-guest-13', firstName: 'Charlotte', lastName: 'White', rsvpStatus: 'confirmed', group: 'Family',
         relationships: [
           { guestId: 'demo-guest-1', type: 'family', strength: 4 },
           { guestId: 'demo-guest-10', type: 'family', strength: 4 },
@@ -464,7 +464,7 @@ const createDefaultEvent = (): Event => {
         interests: ['philanthropy', 'art', 'travel'], email: 'charlotte@whitemedia.com'
       },
       {
-        id: 'demo-guest-14', firstName: 'Benjamin', lastName: 'Taylor', tableId: table3Id, rsvpStatus: 'confirmed',
+        id: 'demo-guest-14', firstName: 'Benjamin', lastName: 'Taylor', rsvpStatus: 'confirmed',
         relationships: [
           { guestId: 'demo-guest-8', type: 'avoid', strength: 5 },
         ],
@@ -472,7 +472,7 @@ const createDefaultEvent = (): Event => {
         interests: ['startups', 'golf', 'wine'], email: 'ben@taylorvc.com'
       },
       {
-        id: 'demo-guest-15', firstName: 'Daniel', lastName: 'Thompson', tableId: table3Id, rsvpStatus: 'confirmed', group: 'Friends',
+        id: 'demo-guest-15', firstName: 'Daniel', lastName: 'Thompson', rsvpStatus: 'confirmed', group: 'Friends',
         relationships: [
           { guestId: 'demo-guest-11', type: 'partner', strength: 5 },
         ],
