@@ -21,6 +21,12 @@ const __dirname = path.dirname(__filename);
 const VALID_ROUTES = [
   '/',
   '/events',
+  '/wedding-seating',
+  '/corporate-events',
+  '/gala-seating',
+  '/team-offsite',
+  '/private-party',
+  '/how-it-works',
   // Dynamic routes like /events/:eventId/*, /table/:encodedData, /share/:encodedData
   // should NOT be in sitemap as they require runtime data
 ];
