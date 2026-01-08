@@ -22,6 +22,9 @@ export async function enterApp(page: Page): Promise<void> {
     const data = stored ? JSON.parse(stored) : { state: {}, version: 13 };
     data.state = data.state || {};
     data.state.hasCompletedOnboarding = true;
+    // Also mark immersive hints as seen to prevent them from blocking tests
+    data.state.hasSeenImmersiveHint = true;
+    data.state.hasSeenLandscapeHint = true;
     data.version = 13;
     localStorage.setItem('seating-arrangement-storage', JSON.stringify(data));
   });
@@ -44,32 +47,58 @@ export async function enterApp(page: Page): Promise<void> {
 }
 
 /**
- * Open the mobile hamburger menu (only needed on mobile)
- * Handles both immersive mode (canvas view) and normal mode (other views)
+ * Check if we're in immersive canvas mode (MobileImmersiveCanvas)
+ */
+export async function isImmersiveCanvasMode(page: Page): Promise<boolean> {
+  const cornerIndicator = page.locator('.corner-indicator');
+  return await cornerIndicator.isVisible({ timeout: 500 }).catch(() => false);
+}
+
+/**
+ * Open the bottom control sheet in immersive canvas mode
+ * Uses corner indicator → transient top bar → menu button
+ */
+export async function openBottomControlSheet(page: Page): Promise<void> {
+  const cornerIndicator = page.locator('.corner-indicator');
+  if (await cornerIndicator.isVisible({ timeout: 500 }).catch(() => false)) {
+    // Use tap for mobile devices (more reliable than click for touch emulation)
+    await cornerIndicator.tap();
+    // Small wait for tap to register and state to update
+    await page.waitForTimeout(300);
+    // Wait for transient top bar to slide in (look for the element becoming visible via transform)
+    await expect(page.locator('.transient-top-bar.visible')).toBeVisible({ timeout: 5000 });
+    // Now tap the menu button in the transient top bar
+    await page.locator('.transient-top-bar .menu-btn').tap();
+    // Wait for bottom control sheet to appear
+    await expect(page.locator('.bottom-control-sheet')).toBeVisible({ timeout: 3000 });
+  } else {
+    throw new Error('Corner indicator not visible - cannot open bottom control sheet');
+  }
+}
+
+/**
+ * Open the mobile hamburger menu (only needed on mobile, non-canvas views)
+ * In canvas view, the mobile menu sheet doesn't exist - use openBottomControlSheet instead
  */
 export async function openMobileMenu(page: Page): Promise<void> {
-  // Check if we're in immersive mode (hamburger button not directly visible)
+  // Check if we're in immersive mode - if so, we can't open mobile menu sheet
+  const isImmersive = await isImmersiveCanvasMode(page);
+  if (isImmersive) {
+    throw new Error('openMobileMenu called in immersive canvas mode. Use openBottomControlSheet instead.');
+  }
+
+  // Check if hamburger is visible
   const hamburger = page.locator('.hamburger-btn');
   const hamburgerVisible = await hamburger.isVisible({ timeout: 500 }).catch(() => false);
 
-  if (!hamburgerVisible) {
-    // In immersive mode - need to tap corner indicator to reveal top bar first
-    const cornerIndicator = page.locator('.corner-indicator');
-    if (await cornerIndicator.isVisible({ timeout: 500 }).catch(() => false)) {
-      await cornerIndicator.click();
-      // Wait for transient top bar to slide in
-      await expect(page.locator('.transient-top-bar.visible')).toBeVisible({ timeout: 2000 });
-      // Now click the menu button in the transient top bar
-      await page.locator('.transient-top-bar .menu-btn').click();
-    }
-  } else {
-    // Normal mode - just click hamburger
+  if (hamburgerVisible) {
     await hamburger.click();
+    await expect(page.locator('.mobile-menu-sheet')).toBeVisible();
+    // Wait for animation to complete
+    await page.waitForTimeout(200);
+  } else {
+    throw new Error('Hamburger button not visible and not in immersive mode');
   }
-
-  await expect(page.locator('.mobile-menu-sheet')).toBeVisible();
-  // Wait for animation to complete
-  await page.waitForTimeout(200);
 }
 
 /**
@@ -86,21 +115,38 @@ export async function closeMobileMenu(page: Page): Promise<void> {
 /**
  * Click "Add Table" and select a table shape.
  * On desktop: clicks dropdown button, then menu item
- * On mobile: opens hamburger menu, clicks Add Table, then selects shape
+ * On mobile canvas (immersive): uses the FAB
+ * On mobile other views: opens hamburger menu, clicks Add Table, then selects shape
  */
 export async function addTable(page: Page, shape: 'round' | 'rectangle' = 'round'): Promise<void> {
   const isMobile = await isMobileViewport(page);
 
   if (isMobile) {
-    // Open mobile menu
-    await openMobileMenu(page);
+    // Check if we're in immersive canvas mode
+    const isImmersive = await isImmersiveCanvasMode(page);
 
-    // Click "Add Table" to show submenu
-    await page.locator('.menu-item:has-text("Add Table")').click();
+    if (isImmersive) {
+      // Use the FAB in canvas view - wait for it to be visible first
+      const fab = page.locator('.mobile-fab');
+      await expect(fab).toBeVisible({ timeout: 3000 });
+      await fab.tap();
+      // Wait for FAB actions to expand
+      await expect(page.locator('.fab-actions.visible')).toBeVisible({ timeout: 3000 });
 
-    // Select the shape
-    const shapeText = shape === 'round' ? 'Round Table' : 'Rectangle Table';
-    await page.locator(`.menu-item:has-text("${shapeText}")`).click();
+      // Tap the appropriate table action
+      const ariaLabel = shape === 'round' ? 'Add Round Table' : 'Add Rectangle Table';
+      await page.locator(`.fab-action[aria-label="${ariaLabel}"]`).tap();
+    } else {
+      // Open mobile menu for non-canvas views
+      await openMobileMenu(page);
+
+      // Click "Add Table" to show submenu
+      await page.locator('.menu-item:has-text("Add Table")').click();
+
+      // Select the shape
+      const shapeText = shape === 'round' ? 'Round Table' : 'Rectangle Table';
+      await page.locator(`.menu-item:has-text("${shapeText}")`).click();
+    }
   } else {
     // Desktop: use dropdown
     const addTableBtn = page.locator('button:has-text("Add Table")').first();
@@ -114,14 +160,28 @@ export async function addTable(page: Page, shape: 'round' | 'rectangle' = 'round
 
 /**
  * Click the "Add Guest" button.
- * On mobile: opens hamburger menu first
+ * On mobile canvas (immersive): uses the FAB
+ * On mobile other views: opens hamburger menu first
  */
 export async function clickAddGuest(page: Page): Promise<void> {
   const isMobile = await isMobileViewport(page);
 
   if (isMobile) {
-    await openMobileMenu(page);
-    await page.locator('.menu-item:has-text("Add Guest")').click();
+    // Check if we're in immersive canvas mode
+    const isImmersive = await isImmersiveCanvasMode(page);
+
+    if (isImmersive) {
+      // Use the FAB in canvas view - wait for it to be visible first
+      const fab = page.locator('.mobile-fab');
+      await expect(fab).toBeVisible({ timeout: 3000 });
+      await fab.tap();
+      // Wait for FAB actions to expand
+      await expect(page.locator('.fab-actions.visible')).toBeVisible({ timeout: 3000 });
+      await page.locator('.fab-action[aria-label="Add Guest"]').tap();
+    } else {
+      await openMobileMenu(page);
+      await page.locator('.menu-item:has-text("Add Guest")').click();
+    }
   } else {
     await page.locator('button:has-text("Add Guest")').first().click();
   }
@@ -129,18 +189,31 @@ export async function clickAddGuest(page: Page): Promise<void> {
 
 /**
  * Switch to a different view (Canvas or Guest List).
- * On mobile: uses bottom nav or menu
+ * On mobile canvas (immersive): uses bottom control sheet
+ * On mobile other views: uses bottom nav
  * On desktop: uses toolbar buttons
  */
 export async function switchView(page: Page, view: 'canvas' | 'guests'): Promise<void> {
   const isMobile = await isMobileViewport(page);
 
   if (isMobile) {
-    // Use bottom nav buttons for quick view switching
-    if (view === 'canvas') {
-      await page.locator('.bottom-nav-item:has-text("Canvas")').click();
+    // Check if we're in immersive canvas mode
+    const isImmersive = await isImmersiveCanvasMode(page);
+
+    if (isImmersive) {
+      // In canvas immersive mode, use the bottom control sheet
+      await openBottomControlSheet(page);
+
+      // Tap the appropriate view button in the sheet (tap is more reliable for mobile)
+      const viewText = view === 'canvas' ? 'Canvas' : 'Guests';
+      await page.locator(`.sheet-btn:has-text("${viewText}")`).tap();
     } else {
-      await page.locator('.bottom-nav-item:has-text("Guests")').click();
+      // Use bottom nav buttons for quick view switching (only visible in non-canvas views)
+      if (view === 'canvas') {
+        await page.locator('.bottom-nav-item:has-text("Canvas")').click();
+      } else {
+        await page.locator('.bottom-nav-item:has-text("Guests")').click();
+      }
     }
   } else {
     // Desktop: use toolbar buttons (button text is now "Canvas" and "Guests")
@@ -155,14 +228,24 @@ export async function switchView(page: Page, view: 'canvas' | 'guests'): Promise
 
 /**
  * Click the "Import" button.
- * On mobile: opens hamburger menu first
+ * On mobile canvas (immersive): uses bottom control sheet
+ * On mobile other views: opens hamburger menu first
  */
 export async function clickImport(page: Page): Promise<void> {
   const isMobile = await isMobileViewport(page);
 
   if (isMobile) {
-    await openMobileMenu(page);
-    await page.locator('.menu-item:has-text("Import")').click();
+    // Check if we're in immersive canvas mode
+    const isImmersive = await isImmersiveCanvasMode(page);
+
+    if (isImmersive) {
+      // Use the bottom control sheet in canvas view (tap is more reliable for mobile)
+      await openBottomControlSheet(page);
+      await page.locator('.sheet-btn:has-text("Import")').tap();
+    } else {
+      await openMobileMenu(page);
+      await page.locator('.menu-item:has-text("Import")').click();
+    }
   } else {
     await page.locator('button:has-text("Import")').click();
   }
@@ -170,17 +253,31 @@ export async function clickImport(page: Page): Promise<void> {
 
 /**
  * Toggle the relationships panel.
- * On mobile: opens hamburger menu first, uses toggle
+ * On mobile canvas (immersive): uses bottom control sheet
+ * On mobile other views: opens hamburger menu first, uses toggle
  * On desktop: clicks toolbar button
  */
 export async function toggleRelationships(page: Page): Promise<void> {
   const isMobile = await isMobileViewport(page);
 
   if (isMobile) {
-    await openMobileMenu(page);
-    await page.locator('.menu-item:has-text("Show Relationships")').click();
-    // Menu stays open for toggles - close it
-    await closeMobileMenu(page);
+    // Check if we're in immersive canvas mode
+    const isImmersive = await isImmersiveCanvasMode(page);
+
+    if (isImmersive) {
+      // Use the bottom control sheet in canvas view
+      await openBottomControlSheet(page);
+      // In bottom control sheet, button text is "Relations"
+      // Use JavaScript click to bypass FAB overlay interception
+      await page.locator('.sheet-btn:has-text("Relations")').evaluate((el: HTMLElement) => el.click());
+      // Wait for sheet to close and state to update
+      await page.waitForTimeout(500);
+    } else {
+      await openMobileMenu(page);
+      await page.locator('.menu-item:has-text("Show Relationships")').click();
+      // Menu stays open for toggles - close it
+      await closeMobileMenu(page);
+    }
   } else {
     await page.click('button:has-text("Relationships")');
   }
